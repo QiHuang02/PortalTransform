@@ -1,0 +1,10 @@
+{
+  "emi.category.fantasytools.portal_transform": "Portal Transform",
+  "tooltip.fantasytools.portal_transform.byproduct": "Byproduct",
+  "tooltip.fantasytools.portal_transform.byproduct.chance": "Chance: %s",
+  "tooltip.fantasytools.portal_transform.byproduct.max_count": "Max Count: %s",
+  "tooltip.fantasytools.portal_transform.byproduct.min_count": "Min Count: %s",
+  "tooltip.fantasytools.portal_transform.dimension": "Dimension Requirement",
+  "tooltip.fantasytools.portal_transform.no_requirement": "No requirement",
+  "tooltip.fantasytools.portal_transform.unknown_dimension": "Unknown dimensions"
+}
