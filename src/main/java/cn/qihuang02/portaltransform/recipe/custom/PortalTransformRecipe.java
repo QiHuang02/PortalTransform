@@ -1,6 +1,6 @@
 package cn.qihuang02.portaltransform.recipe.custom;
 
-import cn.qihuang02.portaltransform.recipe.PTRecipes;
+import cn.qihuang02.portaltransform.recipe.Recipes;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -82,12 +82,12 @@ public record PortalTransformRecipe(
 
     @Override
     public @NotNull RecipeSerializer<?> getSerializer() {
-        return PTRecipes.PORTAL_TRANSFORM_SERIALIZER.get();
+        return Recipes.PORTAL_TRANSFORM_SERIALIZER.get();
     }
 
     @Override
     public @NotNull RecipeType<?> getType() {
-        return PTRecipes.PORTAL_TRANSFORM_TYPE.get();
+        return Recipes.PORTAL_TRANSFORM_TYPE.get();
     }
 
     public Optional<List<Byproducts>> getByproducts() {

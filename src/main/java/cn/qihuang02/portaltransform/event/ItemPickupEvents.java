@@ -1,7 +1,7 @@
 package cn.qihuang02.portaltransform.event;
 
 import cn.qihuang02.portaltransform.PortalTransform;
-import cn.qihuang02.portaltransform.component.PTComponents;
+import cn.qihuang02.portaltransform.component.Components;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -19,8 +19,8 @@ public class ItemPickupEvents {
         ItemEntity itemEntity = event.getItemEntity();
         ItemStack stack = itemEntity.getItem();
 
-        if (stack.has(PTComponents.NO_PORTAL_TRANSFORM.get())) {
-            stack.remove(PTComponents.NO_PORTAL_TRANSFORM.get());
+        if (stack.has(Components.NO_PORTAL_TRANSFORM.get())) {
+            stack.remove(Components.NO_PORTAL_TRANSFORM.get());
         }
 
         if (!player.level().isClientSide()) {

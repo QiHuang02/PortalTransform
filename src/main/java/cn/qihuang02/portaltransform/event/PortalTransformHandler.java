@@ -1,8 +1,8 @@
 package cn.qihuang02.portaltransform.event;
 
 import cn.qihuang02.portaltransform.PortalTransform;
-import cn.qihuang02.portaltransform.component.PTComponents;
-import cn.qihuang02.portaltransform.recipe.PTRecipes;
+import cn.qihuang02.portaltransform.component.Components;
+import cn.qihuang02.portaltransform.recipe.Recipes;
 import cn.qihuang02.portaltransform.recipe.custom.Byproducts;
 import cn.qihuang02.portaltransform.recipe.custom.PortalTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.custom.SimpleItemInput;
@@ -62,7 +62,7 @@ public class PortalTransformHandler {
 
     private static boolean hasNoPortalTransform(ItemEntity itemEntity) {
         return Boolean.TRUE.equals(
-                itemEntity.getItem().get(PTComponents.NO_PORTAL_TRANSFORM.get())
+                itemEntity.getItem().get(Components.NO_PORTAL_TRANSFORM.get())
         );
     }
 
@@ -83,7 +83,7 @@ public class PortalTransformHandler {
             RecipeManager recipeManager = currentLevel.getRecipeManager();
             SimpleItemInput recipeInput = new SimpleItemInput(inputStack);
             return recipeManager.getRecipeFor(
-                    PTRecipes.PORTAL_TRANSFORM_TYPE.get(),
+                    Recipes.PORTAL_TRANSFORM_TYPE.get(),
                     recipeInput,
                     currentLevel
             );
@@ -153,7 +153,7 @@ public class PortalTransformHandler {
         int maxStackSize = byproductStack.getMaxStackSize();
         int total = byproductStack.getCount();
 
-        byproductStack.set(PTComponents.NO_PORTAL_TRANSFORM.get(), true);
+        byproductStack.set(Components.NO_PORTAL_TRANSFORM.get(), true);
 
         while (total > 0) {
             int spawnCount = Math.min(total, maxStackSize);

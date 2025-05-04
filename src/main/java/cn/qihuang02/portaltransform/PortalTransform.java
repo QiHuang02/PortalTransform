@@ -1,11 +1,10 @@
 package cn.qihuang02.portaltransform;
 
-import cn.qihuang02.portaltransform.component.PTComponents;
-import cn.qihuang02.portaltransform.recipe.PTRecipes;
+import cn.qihuang02.portaltransform.component.Components;
+import cn.qihuang02.portaltransform.recipe.Recipes;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.common.NeoForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,10 +16,9 @@ public class PortalTransform
 
     public PortalTransform(IEventBus modEventBus)
     {
-        PTComponents.register(modEventBus);
-        PTRecipes.register(modEventBus);
+        Components.register(modEventBus);
+        Recipes.register(modEventBus);
 
-        NeoForge.EVENT_BUS.register(this);
     }
 
     public static ResourceLocation getRL(String path) {
