@@ -13,6 +13,22 @@ group = mod_group_id
 
 repositories {
     mavenLocal()
+
+    maven {
+        // saps.dev Maven (KubeJS and Rhino)
+        url = uri("https://maven.latvian.dev/releases")
+        content {
+            includeGroup "dev.latvian.mods"
+            includeGroup "dev.latvian.apps"
+        }
+    }
+    maven {
+        // For com.github.rtyley:animated-gif-lib-for-java, a KubeJS dependency
+        url = uri('https://jitpack.io')
+        content {
+            includeGroup "com.github.rtyley"
+        }
+    }
 }
 
 base {
@@ -54,6 +70,9 @@ configurations {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
+
+    compileOnly "dev.latvian.mods:kubejs-neoforge:${kubejs_version}"
+
 }
 
 tasks.withType(ProcessResources).configureEach {
