@@ -10,18 +10,19 @@ import dev.latvian.mods.kubejs.recipe.schema.RecipeComponentFactoryRegistry;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeFactoryRegistry;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeSchemaRegistry;
 import dev.latvian.mods.kubejs.script.BindingRegistry;
+import org.jetbrains.annotations.NotNull;
 
 public class KubeJSPlugin implements dev.latvian.mods.kubejs.plugin.KubeJSPlugin {
 
     @Override
-    public void registerBindings(BindingRegistry bindings) {
+    public void registerBindings(@NotNull BindingRegistry bindings) {
         if (bindings.type().isServer()) {
             bindings.add("Byproduct", ByproductsBinding.class);
         }
     }
 
     @Override
-    public void registerRecipeComponents(RecipeComponentFactoryRegistry registry) {
+    public void registerRecipeComponents(@NotNull RecipeComponentFactoryRegistry registry) {
         registry.register(LevelComponent.DIMENSION);
         registry.register(ByproductsComponent.BYPRODUCT);
     }

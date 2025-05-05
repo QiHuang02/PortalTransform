@@ -8,11 +8,12 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
+import org.jetbrains.annotations.NotNull;
 
 @EventBusSubscriber(modid = PortalTransform.MODID, bus = EventBusSubscriber.Bus.GAME)
 public class ItemPickupEvents {
     @SubscribeEvent
-    public static void onItemPickup(ItemEntityPickupEvent.Pre event) {
+    public static void onItemPickup(ItemEntityPickupEvent.@NotNull Pre event) {
         if (event.getPlayer().level().isClientSide()) return;
 
         Player player = event.getPlayer();

@@ -39,7 +39,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     private final List<EmiStack> byproductsForDisplay;
     private EmiStack output;
 
-    public EmiRecipe(RecipeHolder<PortalTransformRecipe> holder) {
+    public EmiRecipe(@NotNull RecipeHolder<PortalTransformRecipe> holder) {
         this.recipeHolder = holder;
         this.recipe = holder.value();
         this.input = EmiIngredient.of(recipe.inputIngredient());
@@ -98,7 +98,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     }
 
     @Override
-    public void addWidgets(WidgetHolder widgets) {
+    public void addWidgets(@NotNull WidgetHolder widgets) {
         int centerX = (getDisplayWidth() / 2) - 8;
 
         widgets.addSlot(input, centerX, 2).appendTooltip(() -> createDimensionTooltip(recipe.currentDimension()));
@@ -123,7 +123,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         addByproductsSlots(widgets);
     }
 
-    private ClientTooltipComponent createDimensionTooltip(Optional<ResourceKey<Level>> dimensionKey) {
+    private @NotNull ClientTooltipComponent createDimensionTooltip(@NotNull Optional<ResourceKey<Level>> dimensionKey) {
         MutableComponent dimensionText = Component.translatable("tooltip.portaltransform.portal_transform.dimension")
                 .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
                 .append(

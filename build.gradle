@@ -15,7 +15,6 @@ repositories {
     mavenLocal()
 
     maven {
-        // saps.dev Maven (KubeJS and Rhino)
         url = uri("https://maven.latvian.dev/releases")
         content {
             includeGroup "dev.latvian.mods"
@@ -23,7 +22,6 @@ repositories {
         }
     }
     maven {
-        // For com.github.rtyley:animated-gif-lib-for-java, a KubeJS dependency
         url = uri('https://jitpack.io')
         content {
             includeGroup "com.github.rtyley"

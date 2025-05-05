@@ -7,6 +7,7 @@ import net.minecraft.core.registries.Registries;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.UnaryOperator;
 
@@ -17,7 +18,7 @@ public class Components {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> NO_PORTAL_TRANSFORM =
             register(builder -> builder.persistent(Codec.BOOL));
 
-    private static <T> DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(
+    private static <T> @NotNull DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(
             UnaryOperator<DataComponentType.Builder<T>> builderOperator
     ) {
         return DATA_COMPONENT_TYPES.register("no_portal_transform", () -> builderOperator.apply(DataComponentType.builder()).build());

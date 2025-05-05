@@ -12,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
+import org.jetbrains.annotations.NotNull;
 
 @EmiEntrypoint
 public class FTEmiClientPlugin implements EmiPlugin {
@@ -24,7 +25,7 @@ public class FTEmiClientPlugin implements EmiPlugin {
     );
 
     @Override
-    public void register(EmiRegistry registry) {
+    public void register(@NotNull EmiRegistry registry) {
         registry.addCategory(PORTAL_TRANSFORM_CATEGORY);
 
         RecipeManager recipeManager = null;

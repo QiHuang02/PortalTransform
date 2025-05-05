@@ -19,6 +19,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -99,7 +100,7 @@ public class PortalTransformHandler {
                 matchesDimension(recipe.getTargetDimension(), targetDimKey);
     }
 
-    private static boolean matchesDimension(Optional<ResourceKey<Level>> requiredDim, ResourceKey<Level> actualDim) {
+    private static boolean matchesDimension(@NotNull Optional<ResourceKey<Level>> requiredDim, @NotNull ResourceKey<Level> actualDim) {
         return requiredDim.map(actualDim::equals).orElse(true);
     }
 
