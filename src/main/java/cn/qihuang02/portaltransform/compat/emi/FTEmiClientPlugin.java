@@ -7,19 +7,20 @@ import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
-import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.render.EmiTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 
 @EmiEntrypoint
 public class FTEmiClientPlugin implements EmiPlugin {
+    public static final ResourceLocation TEXTURE = PortalTransform.getRL("textures/gui/emi/icon.png");
+    public static final EmiTexture ICON = new EmiTexture(TEXTURE, 0, 0, 16, 16, 16, 16, 16, 16);
     public static final ResourceLocation CATEGORY_ID = PortalTransform.getRL("portal_transform");
     public static final EmiRecipeCategory PORTAL_TRANSFORM_CATEGORY = new EmiRecipeCategory(
             CATEGORY_ID,
-            EmiStack.of(Items.ENDER_PEARL)
+            ICON
     );
 
     @Override

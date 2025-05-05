@@ -124,7 +124,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     }
 
     private ClientTooltipComponent createDimensionTooltip(Optional<ResourceKey<Level>> dimensionKey) {
-        MutableComponent dimensionText = Component.translatable("tooltip.fantasytools.portal_transform.dimension")
+        MutableComponent dimensionText = Component.translatable("tooltip.portaltransform.portal_transform.dimension")
                 .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
                 .append(
                         dimensionKey.map(key -> {
@@ -132,9 +132,9 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                                     String dimensionKeyStr = "dimension." + loc.getNamespace() + "." + loc.getPath();
                                     return I18n.exists(dimensionKeyStr)
                                             ? Component.translatable(dimensionKeyStr)
-                                            : Component.translatable("tooltip.fantasytools.portal_transform.unknown_dimension");
+                                            : Component.translatable("tooltip.portaltransform.portal_transform.unknown_dimension");
                                 })
-                                .orElse(Component.translatable("tooltip.fantasytools.portal_transform.no_requirement"))
+                                .orElse(Component.translatable("tooltip.portaltransform.portal_transform.no_requirement"))
                                 .withStyle(ChatFormatting.GOLD));
         return ClientTooltipComponent.create(dimensionText.getVisualOrderText());
     }
@@ -203,10 +203,10 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                     int minCount = byproducts.get(index).counts().min();
                     int maxCount = byproducts.get(index).counts().max();
                     return List.<Component>of(
-                            Component.translatable("tooltip.fantasytools.portal_transform.byproduct").withStyle(ChatFormatting.GRAY),
-                            Component.translatable("tooltip.fantasytools.portal_transform.byproduct.chance", chance * 100).withStyle(ChatFormatting.GRAY),
-                            Component.translatable("tooltip.fantasytools.portal_transform.byproduct.min_count", minCount).withStyle(ChatFormatting.DARK_GRAY),
-                            Component.translatable("tooltip.fantasytools.portal_transform.byproduct.max_count", maxCount).withStyle(ChatFormatting.DARK_GRAY)
+                            Component.translatable("tooltip.portaltransform.portal_transform.byproduct").withStyle(ChatFormatting.GRAY),
+                            Component.translatable("tooltip.portaltransform.portal_transform.byproduct.chance", chance * 100).withStyle(ChatFormatting.GRAY),
+                            Component.translatable("tooltip.portaltransform.portal_transform.byproduct.min_count", minCount).withStyle(ChatFormatting.DARK_GRAY),
+                            Component.translatable("tooltip.portaltransform.portal_transform.byproduct.max_count", maxCount).withStyle(ChatFormatting.DARK_GRAY)
                     );
                 })
                 .orElse(List.of());
