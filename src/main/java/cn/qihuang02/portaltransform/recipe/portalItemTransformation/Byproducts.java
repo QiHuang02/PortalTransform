@@ -1,4 +1,4 @@
-package cn.qihuang02.portaltransform.recipe.itemTransformation;
+package cn.qihuang02.portaltransform.recipe.portalItemTransformation;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -7,6 +7,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public record Byproducts(
         ItemStack byproduct,
@@ -31,7 +33,7 @@ public record Byproducts(
     );
 
 
-    public static String validate(Byproducts byproduct, int index) {
+    public static @Nullable String validate(@NotNull Byproducts byproduct, int index) {
         if (byproduct.byproduct().isEmpty()) {
             return String.format(ERROR_EMPTY_BYPRODUCT, index);
         }

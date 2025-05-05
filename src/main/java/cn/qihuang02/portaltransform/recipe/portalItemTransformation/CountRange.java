@@ -1,4 +1,4 @@
-package cn.qihuang02.portaltransform.recipe.itemTransformation;
+package cn.qihuang02.portaltransform.recipe.portalItemTransformation;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

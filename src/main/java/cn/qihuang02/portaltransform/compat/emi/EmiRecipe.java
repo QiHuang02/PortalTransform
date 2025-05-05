@@ -1,8 +1,8 @@
 package cn.qihuang02.portaltransform.compat.emi;
 
 import cn.qihuang02.portaltransform.PortalTransform;
-import cn.qihuang02.portaltransform.recipe.itemTransformation.Byproducts;
-import cn.qihuang02.portaltransform.recipe.itemTransformation.ItemTransformationRecipe;
+import cn.qihuang02.portaltransform.recipe.portalItemTransformation.Byproducts;
+import cn.qihuang02.portaltransform.recipe.portalItemTransformation.PortalItemTransformationRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
@@ -19,6 +19,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -32,13 +33,13 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     private static final int BYPRODUCT_GRID_Y = 60;
     private static final int GRID_CELL_SIZE = 18;
 
-    private final RecipeHolder<ItemTransformationRecipe> recipeHolder;
-    private final ItemTransformationRecipe recipe;
+    private final RecipeHolder<PortalItemTransformationRecipe> recipeHolder;
+    private final PortalItemTransformationRecipe recipe;
     private final EmiIngredient input;
     private final List<EmiStack> byproductsForDisplay;
     private final EmiStack output;
 
-    public EmiRecipe(@NotNull RecipeHolder<ItemTransformationRecipe> holder) {
+    public EmiRecipe(@NotNull RecipeHolder<PortalItemTransformationRecipe> holder) {
         this.recipeHolder = holder;
         this.recipe = holder.value();
         this.input = EmiIngredient.of(recipe.inputIngredient());
@@ -121,10 +122,8 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     private ClientTooltipComponent createCombinedTooltip(Optional<ResourceKey<Level>> dimensionKey, boolean isInput) {
         List<Component> lines = new ArrayList<>();
 
-        // Dimension Info
         lines.add(getDimensionComponent(dimensionKey));
 
-        // Transform Chance Info (only for input)
         if (isInput) {
             Component chanceComponent = getTransformChanceComponent();
             if (chanceComponent != null) {
@@ -135,9 +134,8 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         return createMultiLineTooltip(lines);
     }
 
-    private Component getDimensionComponent(Optional<ResourceKey<Level>> dimensionKey) {
-        // (Implementation unchanged)
-        return Component.translatable("tooltip.portaltransform.item_transformation.dimension")
+    private @NotNull Component getDimensionComponent(@NotNull Optional<ResourceKey<Level>> dimensionKey) {
+        return Component.translatable("tooltip.portaltransform.portal_item_transformation.dimension")
                 .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
                 .append(
                         dimensionKey.map(key -> {
@@ -147,7 +145,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                                             ? Component.translatable(dimensionLangKey).withStyle(ChatFormatting.GOLD)
                                             : Component.literal(loc.toString()).withStyle(ChatFormatting.YELLOW);
                                 })
-                                .orElse(Component.translatable("tooltip.portaltransform.item_transformation.no_requirement")
+                                .orElse(Component.translatable("tooltip.portaltransform.portal_item_transformation.no_requirement")
                                         .withStyle(ChatFormatting.GREEN))
                 );
     }
@@ -159,7 +157,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
             return null;
         }
         return Component.translatable(
-                "tooltip.portaltransform.item_transformation.transform_chance",
+                "tooltip.portaltransform.portal_item_transformation.transform_chance",
                 String.format("%.1f%%", chance * 100)
         ).withStyle(ChatFormatting.YELLOW);
     }
@@ -174,7 +172,6 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
             widgets.addSlot(byproduct, pos[0], pos[1])
                     .drawBack(false)
                     .appendTooltip(() ->
-                            // Use the renamed method here
                             createMultiLineTooltip(getByproductChanceTooltip(finalIndex))
                     );
             index++;
@@ -182,7 +179,6 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     }
 
     private List<Component> getByproductChanceTooltip(int index) {
-        // (Implementation unchanged)
         return recipe.byproducts()
                 .filter(byproducts -> index < byproducts.size())
                 .map(byproducts -> {
@@ -191,17 +187,17 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                     int minCount = definition.counts().min();
                     int maxCount = definition.counts().max();
                     List<Component> tooltipLines = new ArrayList<>();
-                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transformation.byproduct").withStyle(ChatFormatting.DARK_PURPLE));
-                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transformation.byproduct.chance", String.format("%.1f%%", chance * 100)).withStyle(ChatFormatting.GRAY));
-                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transformation.byproduct.min_count", minCount).withStyle(ChatFormatting.DARK_GRAY));
-                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transformation.byproduct.max_count", maxCount).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.portal_item_transformation.byproduct").withStyle(ChatFormatting.DARK_PURPLE));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.portal_item_transformation.byproduct.chance", String.format("%.1f%%", chance * 100)).withStyle(ChatFormatting.GRAY));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.portal_item_transformation.byproduct.min_count", minCount).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.portal_item_transformation.byproduct.max_count", maxCount).withStyle(ChatFormatting.DARK_GRAY));
 
                     return tooltipLines;
                 })
                 .orElse(Collections.singletonList(Component.literal("Error: Invalid byproduct index").withStyle(ChatFormatting.RED)));
     }
 
-    private ClientTooltipComponent createMultiLineTooltip(List<Component> components) {
+    private ClientTooltipComponent createMultiLineTooltip(@NotNull List<Component> components) {
         List<ClientTooltipComponent> lines = components.stream()
                 .filter(Objects::nonNull)
                 .map(Component::getVisualOrderText)
@@ -239,7 +235,8 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         };
     }
 
-    private int[] getGridPosition(int index) {
+    @Contract(value = "_ -> new", pure = true)
+    private int @NotNull [] getGridPosition(int index) {
         int row = index / 3;
         int col = index % 3;
 
@@ -247,22 +244,5 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                 BYPRODUCT_GRID_X + col * (GRID_CELL_SIZE),
                 BYPRODUCT_GRID_Y + row * (GRID_CELL_SIZE),
         };
-    }
-
-    private List<Component> getChanceTooltip(int index) {
-        return recipe.byproducts()
-                .filter(byproducts -> index < byproducts.size())
-                .map(byproducts -> {
-                    float chance = byproducts.get(index).chance();
-                    int minCount = byproducts.get(index).counts().min();
-                    int maxCount = byproducts.get(index).counts().max();
-                    return List.<Component>of(
-                            Component.translatable("tooltip.portaltransform.item_transformation.byproduct").withStyle(ChatFormatting.GRAY),
-                            Component.translatable("tooltip.portaltransform.item_transformation.byproduct.chance", chance * 100).withStyle(ChatFormatting.GRAY),
-                            Component.translatable("tooltip.portaltransform.item_transformation.byproduct.min_count", minCount).withStyle(ChatFormatting.DARK_GRAY),
-                            Component.translatable("tooltip.portaltransform.item_transformation.byproduct.max_count", maxCount).withStyle(ChatFormatting.DARK_GRAY)
-                    );
-                })
-                .orElse(List.of());
     }
 }

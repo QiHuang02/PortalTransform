@@ -3,9 +3,9 @@ package cn.qihuang02.portaltransform.event;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
 import cn.qihuang02.portaltransform.recipe.Recipes;
-import cn.qihuang02.portaltransform.recipe.itemTransformation.Byproducts;
-import cn.qihuang02.portaltransform.recipe.itemTransformation.ItemTransformationRecipe;
-import cn.qihuang02.portaltransform.recipe.itemTransformation.SimpleItemInput;
+import cn.qihuang02.portaltransform.recipe.portalItemTransformation.Byproducts;
+import cn.qihuang02.portaltransform.recipe.portalItemTransformation.PortalItemTransformationRecipe;
+import cn.qihuang02.portaltransform.recipe.portalItemTransformation.SimpleItemInput;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -27,12 +27,12 @@ import java.util.*;
 @EventBusSubscriber(
         modid = PortalTransform.MODID,
         bus = EventBusSubscriber.Bus.GAME)
-public class ItemTransformationHandler {
-    private static final Map<ItemStack, Optional<RecipeHolder<ItemTransformationRecipe>>> RECIPE_CACHE =
+public class PortalTransformationHandler {
+    private static final Map<ItemStack, Optional<RecipeHolder<PortalItemTransformationRecipe>>> RECIPE_CACHE =
             Collections.synchronizedMap(new WeakHashMap<>());
 
     @SubscribeEvent
-    public static void onEntityTravelToDimension(EntityTravelToDimensionEvent event) {
+    public static void onEntityTravelToDimension(@NotNull EntityTravelToDimensionEvent event) {
         Entity entity = event.getEntity();
         Level level = entity.level();
 
@@ -56,7 +56,7 @@ public class ItemTransformationHandler {
         findRecipeByInput(itemEntity, serverLevel)
                 .filter(holder -> matchesDimensionRequirements(holder.value(), currentDimKey, targetDimKey))
                 .ifPresent(holder -> {
-                    ItemTransformationRecipe recipe = holder.value();
+                    PortalItemTransformationRecipe recipe = holder.value();
                     float chance = recipe.transformChance();
 
                     if (serverLevel.random.nextFloat() < chance) {
@@ -69,21 +69,21 @@ public class ItemTransformationHandler {
                 });
     }
 
-    private static boolean hasNoPortalTransform(ItemEntity itemEntity) {
+    private static boolean hasNoPortalTransform(@NotNull ItemEntity itemEntity) {
         return Boolean.TRUE.equals(
                 itemEntity.getItem().get(Components.NO_PORTAL_TRANSFORM.get())
         );
     }
 
     /**
-     * 根据物品输入查找匹配的 ItemTransformationRecipe。
+     * 根据物品输入查找匹配的 PortalItemTransformationRecipe。
      *
      * @param itemEntity   正在传送的物品实体。
      * @param currentLevel 物品实体当前所在的维度。
      * @return 如果找到基于物品输入的配方，则返回包含 RecipeHolder 的 Optional；否则返回 Optional.empty()。
      */
-    private static Optional<RecipeHolder<ItemTransformationRecipe>> findRecipeByInput(
-            ItemEntity itemEntity,
+    private static Optional<RecipeHolder<PortalItemTransformationRecipe>> findRecipeByInput(
+            @NotNull ItemEntity itemEntity,
             ServerLevel currentLevel
     ) {
         ItemStack inputStack = itemEntity.getItem();
@@ -92,7 +92,7 @@ public class ItemTransformationHandler {
             RecipeManager recipeManager = currentLevel.getRecipeManager();
             SimpleItemInput recipeInput = new SimpleItemInput(inputStack);
             return recipeManager.getRecipeFor(
-                    Recipes.ITEM_TRANSFORMATION_TYPE.get(),
+                    Recipes.PORTAL_ITEM_TRANSFORMATION_TYPE.get(),
                     recipeInput,
                     currentLevel
             );
@@ -100,7 +100,7 @@ public class ItemTransformationHandler {
     }
 
     private static boolean matchesDimensionRequirements(
-            ItemTransformationRecipe recipe,
+            @NotNull PortalItemTransformationRecipe recipe,
             ResourceKey<Level> currentDimKey,
             ResourceKey<Level> targetDimKey
     ) {
@@ -119,7 +119,7 @@ public class ItemTransformationHandler {
      * @param level      转换发生的维度。
      * @param recipe     定义转换的匹配 PortalTransformRecipe。
      */
-    private static void transforming(ItemEntity itemEntity, ServerLevel level, ItemTransformationRecipe recipe) {
+    private static void transforming(ItemEntity itemEntity, ServerLevel level, PortalItemTransformationRecipe recipe) {
         Objects.requireNonNull(itemEntity, "ItemEntity cannot be null");
         Objects.requireNonNull(level, "Level cannot be null");
         Objects.requireNonNull(recipe, "Recipe cannot be null");
@@ -167,7 +167,7 @@ public class ItemTransformationHandler {
         });
     }
 
-    private static void spawnByproduct(ServerLevel level, Vec3 pos, Vec3 motion, ItemStack byproductStack, RandomSource random) {
+    private static void spawnByproduct(ServerLevel level, Vec3 pos, Vec3 motion, @NotNull ItemStack byproductStack, RandomSource random) {
         int maxStackSize = byproductStack.getMaxStackSize();
         int total = byproductStack.getCount();
 
@@ -185,7 +185,7 @@ public class ItemTransformationHandler {
         }
     }
 
-    private static Vec3 calculateSpreadMotion(Vec3 baseMotion, RandomSource random) {
+    private static @NotNull Vec3 calculateSpreadMotion(@NotNull Vec3 baseMotion, @NotNull RandomSource random) {
         return baseMotion.add(
                 (random.nextFloat() - 0.5) * 0.1,
                 0.1,

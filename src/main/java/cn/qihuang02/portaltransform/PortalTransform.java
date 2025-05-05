@@ -7,6 +7,8 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 @Mod(PortalTransform.MODID)
 public class PortalTransform
@@ -21,7 +23,8 @@ public class PortalTransform
 
     }
 
-    public static ResourceLocation getRL(String path) {
+    @Contract("_ -> new")
+    public static @NotNull ResourceLocation getRL(String path) {
         return ResourceLocation.fromNamespaceAndPath(PortalTransform.MODID, path);
     }
 }

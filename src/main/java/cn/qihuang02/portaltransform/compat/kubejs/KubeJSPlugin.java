@@ -3,8 +3,8 @@ package cn.qihuang02.portaltransform.compat.kubejs;
 import cn.qihuang02.portaltransform.compat.kubejs.binding.ByproductsBinding;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.LevelComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.recipe.PortalTransformKubeRecipe;
-import cn.qihuang02.portaltransform.compat.kubejs.schema.ItemTransformationRecipeSchema;
+import cn.qihuang02.portaltransform.compat.kubejs.recipe.PortalItemTransformKubeRecipe;
+import cn.qihuang02.portaltransform.compat.kubejs.schema.PortalItemTransformationRecipeSchema;
 import cn.qihuang02.portaltransform.recipe.Recipes;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeComponentFactoryRegistry;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeFactoryRegistry;
@@ -28,12 +28,12 @@ public class KubeJSPlugin implements dev.latvian.mods.kubejs.plugin.KubeJSPlugin
     }
 
     @Override
-    public void registerRecipeFactories(RecipeFactoryRegistry registry) {
-        registry.register(PortalTransformKubeRecipe.FACTORY);
+    public void registerRecipeFactories(@NotNull RecipeFactoryRegistry registry) {
+        registry.register(PortalItemTransformKubeRecipe.FACTORY);
     }
 
     @Override
-    public void registerRecipeSchemas(RecipeSchemaRegistry registry) {
-        registry.register(Recipes.ITEM_TRANSFORMATION_TYPE.getId(), ItemTransformationRecipeSchema.PORTAL_TRANSFORM);
+    public void registerRecipeSchemas(@NotNull RecipeSchemaRegistry registry) {
+        registry.register(Recipes.PORTAL_ITEM_TRANSFORMATION_TYPE.getId(), PortalItemTransformationRecipeSchema.PORTAL_TRANSFORM);
     }
 }

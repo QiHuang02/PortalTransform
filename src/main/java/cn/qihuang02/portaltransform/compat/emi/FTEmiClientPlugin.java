@@ -2,7 +2,7 @@ package cn.qihuang02.portaltransform.compat.emi;
 
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.Recipes;
-import cn.qihuang02.portaltransform.recipe.itemTransformation.ItemTransformationRecipe;
+import cn.qihuang02.portaltransform.recipe.portalItemTransformation.PortalItemTransformationRecipe;
 import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 public class FTEmiClientPlugin implements EmiPlugin {
     public static final ResourceLocation TEXTURE = PortalTransform.getRL("textures/gui/emi/icon.png");
     public static final EmiTexture ICON = new EmiTexture(TEXTURE, 0, 0, 16, 16, 16, 16, 16, 16);
-    public static final ResourceLocation CATEGORY_ID = PortalTransform.getRL("item_transformation");
+    public static final ResourceLocation CATEGORY_ID = PortalTransform.getRL("portal_item_transformation");
     public static final EmiRecipeCategory ITEM_TRANSFORMATION_CATEGORY = new EmiRecipeCategory(
             CATEGORY_ID,
             ICON
@@ -33,7 +33,7 @@ public class FTEmiClientPlugin implements EmiPlugin {
             recipeManager = Minecraft.getInstance().level.getRecipeManager();
         }
         if (recipeManager != null) {
-            for (RecipeHolder<ItemTransformationRecipe> holder : recipeManager.getAllRecipesFor(Recipes.ITEM_TRANSFORMATION_TYPE.get())) {
+            for (RecipeHolder<PortalItemTransformationRecipe> holder : recipeManager.getAllRecipesFor(Recipes.PORTAL_ITEM_TRANSFORMATION_TYPE.get())) {
                 registry.addRecipe(new EmiRecipe(holder));
             }
         }
