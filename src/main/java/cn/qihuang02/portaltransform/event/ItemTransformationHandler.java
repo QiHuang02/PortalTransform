@@ -3,9 +3,9 @@ package cn.qihuang02.portaltransform.event;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
 import cn.qihuang02.portaltransform.recipe.Recipes;
-import cn.qihuang02.portaltransform.recipe.custom.Byproducts;
-import cn.qihuang02.portaltransform.recipe.custom.PortalTransformRecipe;
-import cn.qihuang02.portaltransform.recipe.custom.SimpleItemInput;
+import cn.qihuang02.portaltransform.recipe.itemTransformation.Byproducts;
+import cn.qihuang02.portaltransform.recipe.itemTransformation.ItemTransformationRecipe;
+import cn.qihuang02.portaltransform.recipe.itemTransformation.SimpleItemInput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -26,9 +26,9 @@ import java.util.*;
 @EventBusSubscriber(
         modid = PortalTransform.MODID,
         bus = EventBusSubscriber.Bus.GAME)
-public class PortalTransformHandler {
+public class ItemTransformationHandler {
     private static final Random RANDOM = new Random();
-    private static final Map<ItemStack, Optional<RecipeHolder<PortalTransformRecipe>>> RECIPE_CACHE =
+    private static final Map<ItemStack, Optional<RecipeHolder<ItemTransformationRecipe>>> RECIPE_CACHE =
             Collections.synchronizedMap(new WeakHashMap<>());
 
     @SubscribeEvent
@@ -74,7 +74,7 @@ public class PortalTransformHandler {
      * @param currentLevel 物品实体当前所在的维度。
      * @return 如果找到基于物品输入的配方，则返回包含 RecipeHolder 的 Optional；否则返回 Optional.empty()。
      */
-    private static Optional<RecipeHolder<PortalTransformRecipe>> findRecipeByInput(
+    private static Optional<RecipeHolder<ItemTransformationRecipe>> findRecipeByInput(
             ItemEntity itemEntity,
             ServerLevel currentLevel
     ) {
@@ -84,7 +84,7 @@ public class PortalTransformHandler {
             RecipeManager recipeManager = currentLevel.getRecipeManager();
             SimpleItemInput recipeInput = new SimpleItemInput(inputStack);
             return recipeManager.getRecipeFor(
-                    Recipes.PORTAL_TRANSFORM_TYPE.get(),
+                    Recipes.ITEM_TRANSFORMATION_TYPE.get(),
                     recipeInput,
                     currentLevel
             );
@@ -92,7 +92,7 @@ public class PortalTransformHandler {
     }
 
     private static boolean matchesDimensionRequirements(
-            PortalTransformRecipe recipe,
+            ItemTransformationRecipe recipe,
             ResourceKey<Level> currentDimKey,
             ResourceKey<Level> targetDimKey
     ) {
@@ -111,7 +111,7 @@ public class PortalTransformHandler {
      * @param level      转换发生的维度。
      * @param recipe     定义转换的匹配 PortalTransformRecipe。
      */
-    private static void transforming(ItemEntity itemEntity, ServerLevel level, PortalTransformRecipe recipe) {
+    private static void transforming(ItemEntity itemEntity, ServerLevel level, ItemTransformationRecipe recipe) {
         Objects.requireNonNull(itemEntity, "ItemEntity cannot be null");
         Objects.requireNonNull(level, "Level cannot be null");
         Objects.requireNonNull(recipe, "Recipe cannot be null");

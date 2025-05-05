@@ -6,7 +6,7 @@ import dev.latvian.mods.kubejs.recipe.schema.KubeRecipeFactory;
 
 public class PortalTransformKubeRecipe extends KubeRecipe {
     public static final KubeRecipeFactory FACTORY = new KubeRecipeFactory(
-            PortalTransform.getRL("portal_transform"),
+            PortalTransform.getRL("item_transformation"),
             PortalTransformKubeRecipe.class,
             PortalTransformKubeRecipe::new
     );

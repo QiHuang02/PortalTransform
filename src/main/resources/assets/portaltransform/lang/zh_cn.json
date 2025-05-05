@@ -1,10 +1,10 @@
 {
-  "emi.category.portaltransform.portal_transform": "Portal Transform",
-  "tooltip.portaltransform.portal_transform.byproduct": "Byproduct",
-  "tooltip.portaltransform.portal_transform.byproduct.chance": "Chance: %s",
-  "tooltip.portaltransform.portal_transform.byproduct.max_count": "Max Count: %s",
-  "tooltip.portaltransform.portal_transform.byproduct.min_count": "Min Count: %s",
-  "tooltip.portaltransform.portal_transform.dimension": "Dimension Requirement",
-  "tooltip.portaltransform.portal_transform.no_requirement": "No requirement",
-  "tooltip.portaltransform.portal_transform.unknown_dimension": "Unknown dimensions"
+  "emi.category.portaltransform.item_transformation": "Item Transformation",
+  "tooltip.portaltransform.item_transformation.byproduct": "Byproduct",
+  "tooltip.portaltransform.item_transformation.byproduct.chance": "Chance: %s",
+  "tooltip.portaltransform.item_transformation.byproduct.max_count": "Max Count: %s",
+  "tooltip.portaltransform.item_transformation.byproduct.min_count": "Min Count: %s",
+  "tooltip.portaltransform.item_transformation.dimension": "Dimension Requirement",
+  "tooltip.portaltransform.item_transformation.no_requirement": "No requirement",
+  "tooltip.portaltransform.item_transformation.unknown_dimension": "Unknown dimensions",
 }

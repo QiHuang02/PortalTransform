@@ -3,7 +3,7 @@ package cn.qihuang02.portaltransform.compat.kubejs.schema;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.LevelComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.recipe.PortalTransformKubeRecipe;
-import cn.qihuang02.portaltransform.recipe.custom.Byproducts;
+import cn.qihuang02.portaltransform.recipe.itemTransformation.Byproducts;
 import dev.latvian.mods.kubejs.recipe.RecipeKey;
 import dev.latvian.mods.kubejs.recipe.component.IngredientComponent;
 import dev.latvian.mods.kubejs.recipe.component.ItemStackComponent;
@@ -15,7 +15,7 @@ import net.minecraft.world.level.Level;
 
 import java.util.List;
 
-public interface PortalTransformRecipeSchema {
+public interface ItemTransformationRecipeSchema {
     RecipeKey<Ingredient> INPUT = IngredientComponent.INGREDIENT
             .inputKey("input");
     RecipeKey<ItemStack> RESULT = ItemStackComponent.ITEM_STACK
