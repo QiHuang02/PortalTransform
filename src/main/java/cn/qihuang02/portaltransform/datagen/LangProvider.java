@@ -22,5 +22,7 @@ public class LangProvider extends LanguageProvider {
         this.add("tooltip.portaltransform.item_transformation.byproduct.chance", "Chance: %s");
         this.add("tooltip.portaltransform.item_transformation.byproduct.min_count", "Min Count: %s");
         this.add("tooltip.portaltransform.item_transformation.byproduct.max_count", "Max Count: %s");
+
+        this.add("tooltip.portaltransform.item_transformation.transform_chance", "Transform Chance: %s");
     }
 }

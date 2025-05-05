@@ -6,6 +6,7 @@ import cn.qihuang02.portaltransform.recipe.Recipes;
 import cn.qihuang02.portaltransform.recipe.itemTransformation.Byproducts;
 import cn.qihuang02.portaltransform.recipe.itemTransformation.ItemTransformationRecipe;
 import cn.qihuang02.portaltransform.recipe.itemTransformation.SimpleItemInput;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -27,7 +28,6 @@ import java.util.*;
         modid = PortalTransform.MODID,
         bus = EventBusSubscriber.Bus.GAME)
 public class ItemTransformationHandler {
-    private static final Random RANDOM = new Random();
     private static final Map<ItemStack, Optional<RecipeHolder<ItemTransformationRecipe>>> RECIPE_CACHE =
             Collections.synchronizedMap(new WeakHashMap<>());
 
@@ -56,8 +56,16 @@ public class ItemTransformationHandler {
         findRecipeByInput(itemEntity, serverLevel)
                 .filter(holder -> matchesDimensionRequirements(holder.value(), currentDimKey, targetDimKey))
                 .ifPresent(holder -> {
-                    event.setCanceled(true);
-                    transforming(itemEntity, serverLevel, holder.value());
+                    ItemTransformationRecipe recipe = holder.value();
+                    float chance = recipe.transformChance();
+
+                    if (serverLevel.random.nextFloat() < chance) {
+                        event.setCanceled(true);
+                        transforming(itemEntity, serverLevel, recipe);
+                    } else {
+                        event.setCanceled(true);
+                        itemEntity.discard();
+                    }
                 });
     }
 
@@ -68,7 +76,7 @@ public class ItemTransformationHandler {
     }
 
     /**
-     * 根据物品输入查找匹配的 PortalTransformRecipe。
+     * 根据物品输入查找匹配的 ItemTransformationRecipe。
      *
      * @param itemEntity   正在传送的物品实体。
      * @param currentLevel 物品实体当前所在的维度。
@@ -121,28 +129,37 @@ public class ItemTransformationHandler {
         int originalInputCount = itemEntity.getItem().getCount();
 
         ItemStack outputStack = recipe.getResultItem(level.registryAccess());
-        outputStack.setCount(originalInputCount);
-        itemEntity.setItem(outputStack);
+        if (!outputStack.isEmpty()) {
+            outputStack.setCount(originalInputCount);
+            itemEntity.setItem(outputStack);
+        } else {
+            PortalTransform.LOGGER.warn("Recipe {} resulted in an empty output stack!", recipe);
+            itemEntity.discard();
+            return;
+        }
+
+        RandomSource random = level.random;
 
         recipe.getByproducts().ifPresent(byproducts -> {
             for (Byproducts definition : byproducts) {
-                if (definition.counts().min() <= 0 ||
-                        definition.counts().max() < definition.counts().min() ||
-                        definition.byproduct().isEmpty()
+                if (
+                        !definition.counts().isValid() ||
+                                definition.byproduct().isEmpty() ||
+                                definition.chance() <= 0.0F
                 ) {
                     continue;
                 }
 
                 for (int index = 0; index < originalInputCount; index++) {
-                    if (RANDOM.nextFloat() < definition.chance()) {
+                    if (random.nextFloat() < definition.chance()) {
                         int countToSpawn = definition.counts().min();
                         if (definition.counts().max() > definition.counts().min()) {
-                            countToSpawn = RANDOM.nextInt(definition.counts().min(), definition.counts().max() + 1);
+                            countToSpawn = random.nextInt(definition.counts().min(), definition.counts().max() + 1);
                         }
 
                         if (countToSpawn > 0) {
                             ItemStack byproductStack = definition.byproduct().copyWithCount(countToSpawn);
-                            spawnByproduct(level, pos, motion, byproductStack);
+                            spawnByproduct(level, pos, motion, byproductStack, random);
                         }
                     }
                 }
@@ -150,11 +167,12 @@ public class ItemTransformationHandler {
         });
     }
 
-    private static void spawnByproduct(ServerLevel level, Vec3 pos, Vec3 motion, ItemStack byproductStack) {
+    private static void spawnByproduct(ServerLevel level, Vec3 pos, Vec3 motion, ItemStack byproductStack, RandomSource random) {
         int maxStackSize = byproductStack.getMaxStackSize();
         int total = byproductStack.getCount();
 
-        byproductStack.set(Components.NO_PORTAL_TRANSFORM.get(), true);
+        DataComponentType<Boolean> componentType = Components.NO_PORTAL_TRANSFORM.get();
+        byproductStack.set(componentType, true);
 
         while (total > 0) {
             int spawnCount = Math.min(total, maxStackSize);
@@ -162,7 +180,7 @@ public class ItemTransformationHandler {
 
             ItemStack partStack = byproductStack.copyWithCount(spawnCount);
             ItemEntity entity = new ItemEntity(level, pos.x(), pos.y(), pos.z(), partStack);
-            entity.setDeltaMovement(calculateSpreadMotion(motion, level.random));
+            entity.setDeltaMovement(calculateSpreadMotion(motion, random));
             level.addFreshEntity(entity);
         }
     }

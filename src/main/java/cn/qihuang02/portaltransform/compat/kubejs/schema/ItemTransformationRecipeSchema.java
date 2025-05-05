@@ -7,6 +7,7 @@ import cn.qihuang02.portaltransform.recipe.itemTransformation.Byproducts;
 import dev.latvian.mods.kubejs.recipe.RecipeKey;
 import dev.latvian.mods.kubejs.recipe.component.IngredientComponent;
 import dev.latvian.mods.kubejs.recipe.component.ItemStackComponent;
+import dev.latvian.mods.kubejs.recipe.component.NumberComponent;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeSchema;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.ItemStack;
@@ -26,10 +27,13 @@ public interface ItemTransformationRecipeSchema {
             .otherKey("target_dimension").defaultOptional();
     RecipeKey<List<Byproducts>> BYPRODUCTS = ByproductsComponent.LIST
             .otherKey("byproducts").defaultOptional();
+    RecipeKey<Float> TRANSFORM_CHANCE = NumberComponent.FLOAT
+            .otherKey("transform_chance").optional(1.0F);
 
     RecipeSchema PORTAL_TRANSFORM = new RecipeSchema(
             INPUT,
             RESULT,
+            TRANSFORM_CHANCE,
             CURRENT_DIMENSION,
             TARGET_DIMENSION,
             BYPRODUCTS

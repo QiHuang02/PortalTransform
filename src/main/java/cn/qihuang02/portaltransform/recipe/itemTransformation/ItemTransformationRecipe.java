@@ -1,6 +1,7 @@
 package cn.qihuang02.portaltransform.recipe.itemTransformation;
 
 import cn.qihuang02.portaltransform.recipe.Recipes;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -29,7 +30,8 @@ public record ItemTransformationRecipe(
         Optional<ResourceKey<Level>> currentDimension,
         Optional<ResourceKey<Level>> targetDimension,
         ItemStack result,
-        Optional<List<Byproducts>> byproducts
+        Optional<List<Byproducts>> byproducts,
+        float transformChance
 ) implements Recipe<SimpleItemInput> {
     private static final int MAX_BYPRODUCT_TYPES = 9;
     private static final String ERROR_EMPTY_RESULT = "Recipe result byproduct cannot be empty";
@@ -114,6 +116,7 @@ public record ItemTransformationRecipe(
                 ByteBufCodecs.optional(ResourceKey.streamCodec(Registries.DIMENSION)), ItemTransformationRecipe::targetDimension,
                 ItemStack.STREAM_CODEC, ItemTransformationRecipe::result,
                 ByteBufCodecs.optional(ByteBufCodecs.collection(ArrayList::new, Byproducts.STREAM_CODEC)), ItemTransformationRecipe::byproducts,
+                ByteBufCodecs.FLOAT, ItemTransformationRecipe::transformChance,
                 ItemTransformationRecipe::new
         );
 
@@ -123,7 +126,8 @@ public record ItemTransformationRecipe(
                         ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("current_dimension").forGetter(ItemTransformationRecipe::currentDimension),
                         ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("target_dimension").forGetter(ItemTransformationRecipe::targetDimension),
                         ItemStack.STRICT_CODEC.fieldOf("result").forGetter(ItemTransformationRecipe::result),
-                        Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(ItemTransformationRecipe::byproducts)
+                        Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(ItemTransformationRecipe::byproducts),
+                        Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0f).forGetter(ItemTransformationRecipe::transformChance)
                 ).apply(instance, ItemTransformationRecipe::new)
         );
 

@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 public class FTEmiClientPlugin implements EmiPlugin {
     public static final ResourceLocation TEXTURE = PortalTransform.getRL("textures/gui/emi/icon.png");
     public static final EmiTexture ICON = new EmiTexture(TEXTURE, 0, 0, 16, 16, 16, 16, 16, 16);
-    public static final ResourceLocation CATEGORY_ID = PortalTransform.getRL("portal_transform");
+    public static final ResourceLocation CATEGORY_ID = PortalTransform.getRL("item_transformation");
     public static final EmiRecipeCategory ITEM_TRANSFORMATION_CATEGORY = new EmiRecipeCategory(
             CATEGORY_ID,
             ICON

@@ -1,6 +1,7 @@
 package cn.qihuang02.portaltransform.compat.emi;
 
 import cn.qihuang02.portaltransform.PortalTransform;
+import cn.qihuang02.portaltransform.recipe.itemTransformation.Byproducts;
 import cn.qihuang02.portaltransform.recipe.itemTransformation.ItemTransformationRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
@@ -14,7 +15,6 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -23,9 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     public static final ResourceLocation TEXTURE_TRANSFORM = PortalTransform.getRL("textures/gui/emi/transform.png");
@@ -33,24 +31,20 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     private static final int BYPRODUCT_GRID_X = 34;
     private static final int BYPRODUCT_GRID_Y = 60;
     private static final int GRID_CELL_SIZE = 18;
+
     private final RecipeHolder<ItemTransformationRecipe> recipeHolder;
     private final ItemTransformationRecipe recipe;
     private final EmiIngredient input;
     private final List<EmiStack> byproductsForDisplay;
-    private EmiStack output;
+    private final EmiStack output;
 
     public EmiRecipe(@NotNull RecipeHolder<ItemTransformationRecipe> holder) {
         this.recipeHolder = holder;
         this.recipe = holder.value();
         this.input = EmiIngredient.of(recipe.inputIngredient());
 
-        HolderLookup.Provider registries = null;
-        if (Minecraft.getInstance().level != null) {
-            registries = Minecraft.getInstance().level.registryAccess();
-        }
-        if (registries != null) {
-            this.output = EmiStack.of(recipe.getResultItem(registries));
-        }
+        HolderLookup.Provider registries = Minecraft.getInstance().level != null ? Minecraft.getInstance().level.registryAccess() : null;
+        this.output = registries != null ? EmiStack.of(recipe.getResultItem(registries)) : EmiStack.EMPTY;
 
         this.byproductsForDisplay = recipe.byproducts()
                 .map(byproducts -> byproducts.stream()
@@ -101,7 +95,8 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     public void addWidgets(@NotNull WidgetHolder widgets) {
         int centerX = (getDisplayWidth() / 2) - 8;
 
-        widgets.addSlot(input, centerX, 2).appendTooltip(() -> createDimensionTooltip(recipe.currentDimension()));
+        widgets.addSlot(input, centerX, 2).appendTooltip(() -> createCombinedTooltip(recipe.currentDimension(), true));
+
         widgets.addTexture(
                 TEXTURE_TRANSFORM,
                 centerX + 2, 22,
@@ -110,7 +105,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                 13, 16,
                 13, 16
         );
-        widgets.addSlot(output, centerX, 40).recipeContext(this).appendTooltip(() -> createDimensionTooltip(recipe.targetDimension()));
+        widgets.addSlot(output, centerX, 40).recipeContext(this).appendTooltip(() -> createCombinedTooltip(recipe.targetDimension(), false));
         widgets.addTexture(
                 TEXTURE_BIGSLOT,
                 34, 60,
@@ -123,50 +118,109 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         addByproductsSlots(widgets);
     }
 
-    private @NotNull ClientTooltipComponent createDimensionTooltip(@NotNull Optional<ResourceKey<Level>> dimensionKey) {
-        MutableComponent dimensionText = Component.translatable("tooltip.portaltransform.item_transformation.dimension")
+    private ClientTooltipComponent createCombinedTooltip(Optional<ResourceKey<Level>> dimensionKey, boolean isInput) {
+        List<Component> lines = new ArrayList<>();
+
+        // Dimension Info
+        lines.add(getDimensionComponent(dimensionKey));
+
+        // Transform Chance Info (only for input)
+        if (isInput) {
+            Component chanceComponent = getTransformChanceComponent();
+            if (chanceComponent != null) {
+                lines.add(chanceComponent);
+            }
+        }
+
+        return createMultiLineTooltip(lines);
+    }
+
+    private Component getDimensionComponent(Optional<ResourceKey<Level>> dimensionKey) {
+        // (Implementation unchanged)
+        return Component.translatable("tooltip.portaltransform.item_transformation.dimension")
                 .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
                 .append(
                         dimensionKey.map(key -> {
                                     ResourceLocation loc = key.location();
-                                    String dimensionKeyStr = "dimension." + loc.getNamespace() + "." + loc.getPath();
-                                    return I18n.exists(dimensionKeyStr)
-                                            ? Component.translatable(dimensionKeyStr)
-                                            : Component.translatable("tooltip.portaltransform.item_transformation.unknown_dimension");
+                                    String dimensionLangKey = "dimension." + loc.getNamespace() + "." + loc.getPath();
+                                    return I18n.exists(dimensionLangKey)
+                                            ? Component.translatable(dimensionLangKey).withStyle(ChatFormatting.GOLD)
+                                            : Component.literal(loc.toString()).withStyle(ChatFormatting.YELLOW);
                                 })
-                                .orElse(Component.translatable("tooltip.portaltransform.item_transformation.no_requirement"))
-                                .withStyle(ChatFormatting.GOLD));
-        return ClientTooltipComponent.create(dimensionText.getVisualOrderText());
+                                .orElse(Component.translatable("tooltip.portaltransform.item_transformation.no_requirement")
+                                        .withStyle(ChatFormatting.GREEN))
+                );
     }
 
+    @Nullable
+    private Component getTransformChanceComponent() {
+        float chance = recipe.transformChance();
+        if (chance >= 1.0f) {
+            return null;
+        }
+        return Component.translatable(
+                "tooltip.portaltransform.item_transformation.transform_chance",
+                String.format("%.1f%%", chance * 100)
+        ).withStyle(ChatFormatting.YELLOW);
+    }
 
     private void addByproductsSlots(WidgetHolder widgets) {
         int index = 0;
         for (EmiStack byproduct : byproductsForDisplay) {
+            if (index >= 9) break;
             int[] pos = getGridPosition(index);
 
             int finalIndex = index;
             widgets.addSlot(byproduct, pos[0], pos[1])
                     .drawBack(false)
                     .appendTooltip(() ->
-                            createMultiLineTooltip(getChanceTooltip(finalIndex)
-                            ));
+                            // Use the renamed method here
+                            createMultiLineTooltip(getByproductChanceTooltip(finalIndex))
+                    );
             index++;
         }
     }
 
+    private List<Component> getByproductChanceTooltip(int index) {
+        // (Implementation unchanged)
+        return recipe.byproducts()
+                .filter(byproducts -> index < byproducts.size())
+                .map(byproducts -> {
+                    Byproducts definition = byproducts.get(index);
+                    float chance = definition.chance();
+                    int minCount = definition.counts().min();
+                    int maxCount = definition.counts().max();
+                    List<Component> tooltipLines = new ArrayList<>();
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transformation.byproduct").withStyle(ChatFormatting.DARK_PURPLE));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transformation.byproduct.chance", String.format("%.1f%%", chance * 100)).withStyle(ChatFormatting.GRAY));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transformation.byproduct.min_count", minCount).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transformation.byproduct.max_count", maxCount).withStyle(ChatFormatting.DARK_GRAY));
+
+                    return tooltipLines;
+                })
+                .orElse(Collections.singletonList(Component.literal("Error: Invalid byproduct index").withStyle(ChatFormatting.RED)));
+    }
+
     private ClientTooltipComponent createMultiLineTooltip(List<Component> components) {
         List<ClientTooltipComponent> lines = components.stream()
+                .filter(Objects::nonNull)
                 .map(Component::getVisualOrderText)
                 .map(ClientTooltipComponent::create)
                 .toList();
+
+        if (lines.size() <= 1) {
+            return lines.stream().findFirst().orElseGet(() -> ClientTooltipComponent.create(Component.empty().getVisualOrderText()));
+        }
 
         return new ClientTooltipComponent() {
             private static final int LINE_SPACING = 2;
 
             @Override
             public int getHeight() {
-                return lines.stream().mapToInt(ClientTooltipComponent::getHeight).sum() + (lines.size() - 1) * LINE_SPACING;
+                if (lines.isEmpty()) return 0;
+                int totalTextHeight = lines.stream().mapToInt(ClientTooltipComponent::getHeight).sum();
+                int spacing = Math.max(0, lines.size() - 1) * LINE_SPACING;
+                return totalTextHeight + spacing;
             }
 
             @Override
