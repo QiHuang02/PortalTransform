@@ -1,7 +1,7 @@
 package cn.qihuang02.portaltransform.compat.kubejs.binding;
 
-import cn.qihuang02.portaltransform.recipe.portalItemTransformation.Byproducts;
-import cn.qihuang02.portaltransform.recipe.portalItemTransformation.CountRange;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.CountRange;
 import dev.latvian.mods.kubejs.typings.Info;
 import dev.latvian.mods.kubejs.typings.Param;
 import net.minecraft.world.item.ItemStack;

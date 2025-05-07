@@ -3,9 +3,9 @@ package cn.qihuang02.portaltransform.event;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
 import cn.qihuang02.portaltransform.recipe.Recipes;
-import cn.qihuang02.portaltransform.recipe.portalItemTransformation.Byproducts;
-import cn.qihuang02.portaltransform.recipe.portalItemTransformation.PortalItemTransformationRecipe;
-import cn.qihuang02.portaltransform.recipe.portalItemTransformation.SimpleItemInput;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.ItemTransformRecipe;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.SimpleItemInput;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -20,48 +20,68 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @EventBusSubscriber(
         modid = PortalTransform.MODID,
         bus = EventBusSubscriber.Bus.GAME)
-public class PortalTransformationHandler {
-    private static final Map<ItemStack, Optional<RecipeHolder<PortalItemTransformationRecipe>>> RECIPE_CACHE =
-            Collections.synchronizedMap(new WeakHashMap<>());
+public class PortalTransformHandler {
+    private static final Logger LOGGER = PortalTransform.LOGGER;
+
+    private static final Map<ItemStack, Optional<RecipeHolder<ItemTransformRecipe>>> ITEM_RECIPE_CACHE =
+            new ConcurrentHashMap<>();
 
     @SubscribeEvent
     public static void onEntityTravelToDimension(@NotNull EntityTravelToDimensionEvent event) {
         Entity entity = event.getEntity();
-        Level level = entity.level();
+        try (Level level = entity.level()) {
 
-        if (entity instanceof ItemEntity itemEntity) {
-            if (hasNoPortalTransform(itemEntity)) {
-                event.setCanceled(true);
+            if (level.isClientSide() || entity.isRemoved()) {
                 return;
             }
-        }
 
-        if (!(entity instanceof ItemEntity itemEntity) ||
-                level.isClientSide() ||
-                itemEntity.getItem().isEmpty()) {
+            if (!(level instanceof ServerLevel serverLevel)) {
+                return;
+            }
+
+            if (entity instanceof ItemEntity itemEntity) {
+                handleItemTransformation(event, itemEntity, serverLevel);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // --- Item Transformation Logic ---
+    private static void handleItemTransformation(EntityTravelToDimensionEvent event, ItemEntity itemEntity, ServerLevel serverLevel) {
+        if (hasNoPortalTransformComponent(itemEntity)) {
+            event.setCanceled(true);
             return;
         }
 
-        ServerLevel serverLevel = (ServerLevel) level;
+        if (itemEntity.getItem().isEmpty()) {
+            return;
+        }
+
         ResourceKey<Level> currentDimKey = serverLevel.dimension();
         ResourceKey<Level> targetDimKey = event.getDimension();
 
-        findRecipeByInput(itemEntity, serverLevel)
-                .filter(holder -> matchesDimensionRequirements(holder.value(), currentDimKey, targetDimKey))
+        findItemRecipe(itemEntity, serverLevel)
+                .filter(holder -> matchesItemDimensionRequirements(holder.value(), currentDimKey, targetDimKey))
                 .ifPresent(holder -> {
-                    PortalItemTransformationRecipe recipe = holder.value();
+                    ItemTransformRecipe recipe = holder.value();
                     float chance = recipe.transformChance();
 
                     if (serverLevel.random.nextFloat() < chance) {
                         event.setCanceled(true);
-                        transforming(itemEntity, serverLevel, recipe);
+                        transformItem(itemEntity, serverLevel, recipe);
                     } else {
                         event.setCanceled(true);
                         itemEntity.discard();
@@ -69,41 +89,24 @@ public class PortalTransformationHandler {
                 });
     }
 
-    private static boolean hasNoPortalTransform(@NotNull ItemEntity itemEntity) {
-        return Boolean.TRUE.equals(
-                itemEntity.getItem().get(Components.NO_PORTAL_TRANSFORM.get())
-        );
+    private static boolean hasNoPortalTransformComponent(@NotNull ItemEntity itemEntity) {
+        DataComponentType<Boolean> componentType = Components.NO_PORTAL_TRANSFORM.get();
+        return Boolean.TRUE.equals(itemEntity.getItem().get(componentType));
     }
 
-    /**
-     * 根据物品输入查找匹配的 PortalItemTransformationRecipe。
-     *
-     * @param itemEntity   正在传送的物品实体。
-     * @param currentLevel 物品实体当前所在的维度。
-     * @return 如果找到基于物品输入的配方，则返回包含 RecipeHolder 的 Optional；否则返回 Optional.empty()。
-     */
-    private static Optional<RecipeHolder<PortalItemTransformationRecipe>> findRecipeByInput(
-            @NotNull ItemEntity itemEntity,
-            ServerLevel currentLevel
-    ) {
+    private static Optional<RecipeHolder<ItemTransformRecipe>> findItemRecipe(@NotNull ItemEntity itemEntity, ServerLevel currentLevel) {
         ItemStack inputStack = itemEntity.getItem();
-
-        return RECIPE_CACHE.computeIfAbsent(inputStack, stack -> {
+        return ITEM_RECIPE_CACHE.computeIfAbsent(inputStack, stack -> {
             RecipeManager recipeManager = currentLevel.getRecipeManager();
-            SimpleItemInput recipeInput = new SimpleItemInput(inputStack);
             return recipeManager.getRecipeFor(
-                    Recipes.PORTAL_ITEM_TRANSFORMATION_TYPE.get(),
-                    recipeInput,
+                    Recipes.PORTAL_ITEM_TRANSFORM_TYPE.get(),
+                    new SimpleItemInput(stack),
                     currentLevel
             );
         });
     }
 
-    private static boolean matchesDimensionRequirements(
-            @NotNull PortalItemTransformationRecipe recipe,
-            ResourceKey<Level> currentDimKey,
-            ResourceKey<Level> targetDimKey
-    ) {
+    private static boolean matchesItemDimensionRequirements(@NotNull ItemTransformRecipe recipe, ResourceKey<Level> currentDimKey, ResourceKey<Level> targetDimKey) {
         return matchesDimension(recipe.getCurrentDimension(), currentDimKey) &&
                 matchesDimension(recipe.getTargetDimension(), targetDimKey);
     }
@@ -112,14 +115,8 @@ public class PortalTransformationHandler {
         return requiredDim.map(actualDim::equals).orElse(true);
     }
 
-    /**
-     * 根据匹配的配方执行实际的物品转换和副产品生成。
-     *
-     * @param itemEntity 被转换的原始 ItemEntity。
-     * @param level      转换发生的维度。
-     * @param recipe     定义转换的匹配 PortalTransformRecipe。
-     */
-    private static void transforming(ItemEntity itemEntity, ServerLevel level, PortalItemTransformationRecipe recipe) {
+
+    private static void transformItem(ItemEntity itemEntity, ServerLevel level, ItemTransformRecipe recipe) {
         Objects.requireNonNull(itemEntity, "ItemEntity cannot be null");
         Objects.requireNonNull(level, "Level cannot be null");
         Objects.requireNonNull(recipe, "Recipe cannot be null");
@@ -127,39 +124,31 @@ public class PortalTransformationHandler {
         Vec3 pos = itemEntity.position();
         Vec3 motion = itemEntity.getDeltaMovement();
         int originalInputCount = itemEntity.getItem().getCount();
+        RandomSource random = level.random;
 
         ItemStack outputStack = recipe.getResultItem(level.registryAccess());
         if (!outputStack.isEmpty()) {
             outputStack.setCount(originalInputCount);
             itemEntity.setItem(outputStack);
         } else {
-            PortalTransform.LOGGER.warn("Recipe {} resulted in an empty output stack!", recipe);
+            LOGGER.warn("Item Recipe {} resulted in an empty output stack!", recipe);
             itemEntity.discard();
             return;
         }
 
-        RandomSource random = level.random;
-
         recipe.getByproducts().ifPresent(byproducts -> {
             for (Byproducts definition : byproducts) {
-                if (
-                        !definition.counts().isValid() ||
-                                definition.byproduct().isEmpty() ||
-                                definition.chance() <= 0.0F
-                ) {
+                if (!definition.counts().isValid() || definition.byproduct().isEmpty() || definition.chance() <= 0)
                     continue;
-                }
-
                 for (int index = 0; index < originalInputCount; index++) {
                     if (random.nextFloat() < definition.chance()) {
                         int countToSpawn = definition.counts().min();
                         if (definition.counts().max() > definition.counts().min()) {
                             countToSpawn = random.nextInt(definition.counts().min(), definition.counts().max() + 1);
                         }
-
                         if (countToSpawn > 0) {
                             ItemStack byproductStack = definition.byproduct().copyWithCount(countToSpawn);
-                            spawnByproduct(level, pos, motion, byproductStack, random);
+                            spawnItemByproduct(level, pos, motion, byproductStack, random);
                         }
                     }
                 }
@@ -167,7 +156,7 @@ public class PortalTransformationHandler {
         });
     }
 
-    private static void spawnByproduct(ServerLevel level, Vec3 pos, Vec3 motion, @NotNull ItemStack byproductStack, RandomSource random) {
+    private static void spawnItemByproduct(ServerLevel level, Vec3 pos, Vec3 motion, @NotNull ItemStack byproductStack, RandomSource random) {
         int maxStackSize = byproductStack.getMaxStackSize();
         int total = byproductStack.getCount();
 
@@ -177,7 +166,6 @@ public class PortalTransformationHandler {
         while (total > 0) {
             int spawnCount = Math.min(total, maxStackSize);
             total -= spawnCount;
-
             ItemStack partStack = byproductStack.copyWithCount(spawnCount);
             ItemEntity entity = new ItemEntity(level, pos.x(), pos.y(), pos.z(), partStack);
             entity.setDeltaMovement(calculateSpreadMotion(motion, random));

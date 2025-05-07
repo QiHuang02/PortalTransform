@@ -12,17 +12,17 @@ public class LangProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
 
-        this.add("emi.category.portaltransform.portal_item_transformation", "Item Transformation");
+        this.add("emi.category.portaltransform.item_transform", "Item Transform");
 
-        this.add("tooltip.portaltransform.portal_item_transformation.dimension", "Dimension Requirement");
-        this.add("tooltip.portaltransform.portal_item_transformation.unknown_dimension", "Unknown dimensions");
-        this.add("tooltip.portaltransform.portal_item_transformation.no_requirement", "No requirement");
+        this.add("tooltip.portaltransform.item_transform.dimension", "Dimension Requirement");
+        this.add("tooltip.portaltransform.item_transform.unknown_dimension", "Unknown dimensions");
+        this.add("tooltip.portaltransform.item_transform.no_requirement", "No requirement");
 
-        this.add("tooltip.portaltransform.portal_item_transformation.byproduct", "Byproduct");
-        this.add("tooltip.portaltransform.portal_item_transformation.byproduct.chance", "Chance: %s");
-        this.add("tooltip.portaltransform.portal_item_transformation.byproduct.min_count", "Min Count: %s");
-        this.add("tooltip.portaltransform.portal_item_transformation.byproduct.max_count", "Max Count: %s");
+        this.add("tooltip.portaltransform.item_transform.byproduct", "Byproduct");
+        this.add("tooltip.portaltransform.item_transform.byproduct.chance", "Chance: %s");
+        this.add("tooltip.portaltransform.item_transform.byproduct.min_count", "Min Count: %s");
+        this.add("tooltip.portaltransform.item_transform.byproduct.max_count", "Max Count: %s");
 
-        this.add("tooltip.portaltransform.portal_item_transformation.transform_chance", "Transform Chance: %s");
+        this.add("tooltip.portaltransform.item_transform.transform_chance", "Transform Chance: %s");
     }
 }

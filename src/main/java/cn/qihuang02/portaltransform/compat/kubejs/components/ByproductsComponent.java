@@ -1,6 +1,6 @@
 package cn.qihuang02.portaltransform.compat.kubejs.components;
 
-import cn.qihuang02.portaltransform.recipe.portalItemTransformation.Byproducts;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import com.mojang.serialization.Codec;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
 import dev.latvian.mods.rhino.type.TypeInfo;

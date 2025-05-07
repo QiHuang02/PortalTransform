@@ -1,4 +1,4 @@
-package cn.qihuang02.portaltransform.recipe.portalItemTransformation;
+package cn.qihuang02.portaltransform.recipe.ItemTransform;
 
 import cn.qihuang02.portaltransform.recipe.Recipes;
 import com.mojang.serialization.Codec;
@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public record PortalItemTransformationRecipe(
+public record ItemTransformRecipe(
         Ingredient inputIngredient,
         Optional<ResourceKey<Level>> currentDimension,
         Optional<ResourceKey<Level>> targetDimension,
@@ -43,7 +43,7 @@ public record PortalItemTransformationRecipe(
      * @param recipe 待验证的配方实例
      * @return 如果有效，返回包含配方的 DataResult.success；否则返回 DataResult.error。
      */
-    private static DataResult<PortalItemTransformationRecipe> validate(@NotNull PortalItemTransformationRecipe recipe) {
+    private static DataResult<ItemTransformRecipe> validate(@NotNull ItemTransformRecipe recipe) {
         if (recipe.result.isEmpty()) {
             return DataResult.error(() -> ERROR_EMPTY_RESULT);
         }
@@ -84,12 +84,12 @@ public record PortalItemTransformationRecipe(
 
     @Override
     public @NotNull RecipeSerializer<?> getSerializer() {
-        return Recipes.PORTAL_ITEM_TRANSFORMATION_SERIALIZER.get();
+        return Recipes.PORTAL_ITEM_TRANSFORM_SERIALIZER.get();
     }
 
     @Override
     public @NotNull RecipeType<?> getType() {
-        return Recipes.PORTAL_ITEM_TRANSFORMATION_TYPE.get();
+        return Recipes.PORTAL_ITEM_TRANSFORM_TYPE.get();
     }
 
     public Optional<List<Byproducts>> getByproducts() {
@@ -109,38 +109,38 @@ public record PortalItemTransformationRecipe(
         return targetDimension;
     }
 
-    public static class Serializer implements RecipeSerializer<PortalItemTransformationRecipe> {
-        public static final StreamCodec<RegistryFriendlyByteBuf, PortalItemTransformationRecipe> STREAM_CODEC = StreamCodec.composite(
-                Ingredient.CONTENTS_STREAM_CODEC, PortalItemTransformationRecipe::inputIngredient,
-                ByteBufCodecs.optional(ResourceKey.streamCodec(Registries.DIMENSION)), PortalItemTransformationRecipe::currentDimension,
-                ByteBufCodecs.optional(ResourceKey.streamCodec(Registries.DIMENSION)), PortalItemTransformationRecipe::targetDimension,
-                ItemStack.STREAM_CODEC, PortalItemTransformationRecipe::result,
-                ByteBufCodecs.optional(ByteBufCodecs.collection(ArrayList::new, Byproducts.STREAM_CODEC)), PortalItemTransformationRecipe::byproducts,
-                ByteBufCodecs.FLOAT, PortalItemTransformationRecipe::transformChance,
-                PortalItemTransformationRecipe::new
+    public static class Serializer implements RecipeSerializer<ItemTransformRecipe> {
+        public static final StreamCodec<RegistryFriendlyByteBuf, ItemTransformRecipe> STREAM_CODEC = StreamCodec.composite(
+                Ingredient.CONTENTS_STREAM_CODEC, ItemTransformRecipe::inputIngredient,
+                ByteBufCodecs.optional(ResourceKey.streamCodec(Registries.DIMENSION)), ItemTransformRecipe::currentDimension,
+                ByteBufCodecs.optional(ResourceKey.streamCodec(Registries.DIMENSION)), ItemTransformRecipe::targetDimension,
+                ItemStack.STREAM_CODEC, ItemTransformRecipe::result,
+                ByteBufCodecs.optional(ByteBufCodecs.collection(ArrayList::new, Byproducts.STREAM_CODEC)), ItemTransformRecipe::byproducts,
+                ByteBufCodecs.FLOAT, ItemTransformRecipe::transformChance,
+                ItemTransformRecipe::new
         );
 
-        private static final MapCodec<PortalItemTransformationRecipe> BASE_CODEC = RecordCodecBuilder.mapCodec(
+        private static final MapCodec<ItemTransformRecipe> BASE_CODEC = RecordCodecBuilder.mapCodec(
                 instance -> instance.group(
-                        Ingredient.CODEC_NONEMPTY.fieldOf("input").forGetter(PortalItemTransformationRecipe::inputIngredient),
-                        ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("current_dimension").forGetter(PortalItemTransformationRecipe::currentDimension),
-                        ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("target_dimension").forGetter(PortalItemTransformationRecipe::targetDimension),
-                        ItemStack.STRICT_CODEC.fieldOf("result").forGetter(PortalItemTransformationRecipe::result),
-                        Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(PortalItemTransformationRecipe::byproducts),
-                        Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0f).forGetter(PortalItemTransformationRecipe::transformChance)
-                ).apply(instance, PortalItemTransformationRecipe::new)
+                        Ingredient.CODEC_NONEMPTY.fieldOf("input").forGetter(ItemTransformRecipe::inputIngredient),
+                        ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("current_dimension").forGetter(ItemTransformRecipe::currentDimension),
+                        ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("target_dimension").forGetter(ItemTransformRecipe::targetDimension),
+                        ItemStack.STRICT_CODEC.fieldOf("result").forGetter(ItemTransformRecipe::result),
+                        Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(ItemTransformRecipe::byproducts),
+                        Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0f).forGetter(ItemTransformRecipe::transformChance)
+                ).apply(instance, ItemTransformRecipe::new)
         );
 
-        public static final MapCodec<PortalItemTransformationRecipe> CODEC = BASE_CODEC
-                .flatXmap(PortalItemTransformationRecipe::validate,
-                        PortalItemTransformationRecipe::validate
+        public static final MapCodec<ItemTransformRecipe> CODEC = BASE_CODEC
+                .flatXmap(ItemTransformRecipe::validate,
+                        ItemTransformRecipe::validate
                 );
 
-        public @NotNull MapCodec<PortalItemTransformationRecipe> codec() {
+        public @NotNull MapCodec<ItemTransformRecipe> codec() {
             return CODEC;
         }
 
-        public @NotNull StreamCodec<RegistryFriendlyByteBuf, PortalItemTransformationRecipe> streamCodec() {
+        public @NotNull StreamCodec<RegistryFriendlyByteBuf, ItemTransformRecipe> streamCodec() {
             return STREAM_CODEC;
         }
     }

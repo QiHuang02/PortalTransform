@@ -1,8 +1,8 @@
 package cn.qihuang02.portaltransform.compat.emi;
 
 import cn.qihuang02.portaltransform.PortalTransform;
-import cn.qihuang02.portaltransform.recipe.portalItemTransformation.Byproducts;
-import cn.qihuang02.portaltransform.recipe.portalItemTransformation.PortalItemTransformationRecipe;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.ItemTransformRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
@@ -33,13 +33,13 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     private static final int BYPRODUCT_GRID_Y = 60;
     private static final int GRID_CELL_SIZE = 18;
 
-    private final RecipeHolder<PortalItemTransformationRecipe> recipeHolder;
-    private final PortalItemTransformationRecipe recipe;
+    private final RecipeHolder<ItemTransformRecipe> recipeHolder;
+    private final ItemTransformRecipe recipe;
     private final EmiIngredient input;
     private final List<EmiStack> byproductsForDisplay;
     private final EmiStack output;
 
-    public EmiRecipe(@NotNull RecipeHolder<PortalItemTransformationRecipe> holder) {
+    public EmiRecipe(@NotNull RecipeHolder<ItemTransformRecipe> holder) {
         this.recipeHolder = holder;
         this.recipe = holder.value();
         this.input = EmiIngredient.of(recipe.inputIngredient());
@@ -57,7 +57,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
 
     @Override
     public EmiRecipeCategory getCategory() {
-        return FTEmiClientPlugin.ITEM_TRANSFORMATION_CATEGORY;
+        return EmiClientPlugin.ITEM_TRANSFORMATION_CATEGORY;
     }
 
     @Override
@@ -135,7 +135,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     }
 
     private @NotNull Component getDimensionComponent(@NotNull Optional<ResourceKey<Level>> dimensionKey) {
-        return Component.translatable("tooltip.portaltransform.portal_item_transformation.dimension")
+        return Component.translatable("tooltip.portaltransform.item_transform.dimension")
                 .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
                 .append(
                         dimensionKey.map(key -> {
@@ -145,7 +145,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                                             ? Component.translatable(dimensionLangKey).withStyle(ChatFormatting.GOLD)
                                             : Component.literal(loc.toString()).withStyle(ChatFormatting.YELLOW);
                                 })
-                                .orElse(Component.translatable("tooltip.portaltransform.portal_item_transformation.no_requirement")
+                                .orElse(Component.translatable("tooltip.portaltransform.item_transform.no_requirement")
                                         .withStyle(ChatFormatting.GREEN))
                 );
     }
@@ -157,7 +157,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
             return null;
         }
         return Component.translatable(
-                "tooltip.portaltransform.portal_item_transformation.transform_chance",
+                "tooltip.portaltransform.item_transform.transform_chance",
                 String.format("%.1f%%", chance * 100)
         ).withStyle(ChatFormatting.YELLOW);
     }
@@ -187,10 +187,10 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                     int minCount = definition.counts().min();
                     int maxCount = definition.counts().max();
                     List<Component> tooltipLines = new ArrayList<>();
-                    tooltipLines.add(Component.translatable("tooltip.portaltransform.portal_item_transformation.byproduct").withStyle(ChatFormatting.DARK_PURPLE));
-                    tooltipLines.add(Component.translatable("tooltip.portaltransform.portal_item_transformation.byproduct.chance", String.format("%.1f%%", chance * 100)).withStyle(ChatFormatting.GRAY));
-                    tooltipLines.add(Component.translatable("tooltip.portaltransform.portal_item_transformation.byproduct.min_count", minCount).withStyle(ChatFormatting.DARK_GRAY));
-                    tooltipLines.add(Component.translatable("tooltip.portaltransform.portal_item_transformation.byproduct.max_count", maxCount).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transform.byproduct").withStyle(ChatFormatting.DARK_PURPLE));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transform.byproduct.chance", String.format("%.1f%%", chance * 100)).withStyle(ChatFormatting.GRAY));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transform.byproduct.min_count", minCount).withStyle(ChatFormatting.DARK_GRAY));
+                    tooltipLines.add(Component.translatable("tooltip.portaltransform.item_transform.byproduct.max_count", maxCount).withStyle(ChatFormatting.DARK_GRAY));
 
                     return tooltipLines;
                 })

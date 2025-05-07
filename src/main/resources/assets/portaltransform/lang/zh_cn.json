@@ -1,11 +1,11 @@
 {
-  "emi.category.portaltransform.portal_item_transformation": "Item Transformation",
-  "tooltip.portaltransform.portal_item_transformation.byproduct": "Byproduct",
-  "tooltip.portaltransform.portal_item_transformation.byproduct.chance": "Chance: %s",
-  "tooltip.portaltransform.portal_item_transformation.byproduct.max_count": "Max Count: %s",
-  "tooltip.portaltransform.portal_item_transformation.byproduct.min_count": "Min Count: %s",
-  "tooltip.portaltransform.portal_item_transformation.dimension": "Dimension Requirement",
-  "tooltip.portaltransform.portal_item_transformation.no_requirement": "No requirement",
-  "tooltip.portaltransform.portal_item_transformation.transform_chance": "Transform Chance: %s",
-  "tooltip.portaltransform.portal_item_transformation.unknown_dimension": "Unknown dimensions"
+  "emi.category.portaltransform.item_transform": "Item Transform",
+  "tooltip.portaltransform.item_transform.byproduct": "Byproduct",
+  "tooltip.portaltransform.item_transform.byproduct.chance": "Chance: %s",
+  "tooltip.portaltransform.item_transform.byproduct.max_count": "Max Count: %s",
+  "tooltip.portaltransform.item_transform.byproduct.min_count": "Min Count: %s",
+  "tooltip.portaltransform.item_transform.dimension": "Dimension Requirement",
+  "tooltip.portaltransform.item_transform.no_requirement": "No requirement",
+  "tooltip.portaltransform.item_transform.transform_chance": "Transform Chance: %s",
+  "tooltip.portaltransform.item_transform.unknown_dimension": "Unknown dimensions"
 }
