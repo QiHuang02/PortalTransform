@@ -1,5 +1,6 @@
 package cn.qihuang02.portaltransform.compat.kubejs.components;
 
+import cn.qihuang02.portaltransform.PortalTransform;
 import com.mojang.serialization.Codec;
 import dev.latvian.mods.kubejs.recipe.KubeRecipe;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
@@ -15,7 +16,7 @@ public class LevelComponent implements RecipeComponent<ResourceKey<Level>> {
     public static final LevelComponent DIMENSION = new LevelComponent();
 
     private static final Codec<ResourceKey<Level>> CODEC = ResourceKey.codec(Registries.DIMENSION);
-    private static final String COMPONENT_NAME = "fantasytools:dimension";
+    private static final String COMPONENT_NAME = PortalTransform.MODID + ":dimension";
 
     public LevelComponent() {
     }

@@ -41,21 +41,18 @@ public class PortalTransformHandler {
     @SubscribeEvent
     public static void onEntityTravelToDimension(@NotNull EntityTravelToDimensionEvent event) {
         Entity entity = event.getEntity();
-        try (Level level = entity.level()) {
+        Level level = entity.level();
 
-            if (level.isClientSide() || entity.isRemoved()) {
-                return;
-            }
+        if (level.isClientSide() || entity.isRemoved()) {
+            return;
+        }
 
-            if (!(level instanceof ServerLevel serverLevel)) {
-                return;
-            }
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
 
-            if (entity instanceof ItemEntity itemEntity) {
-                handleItemTransformation(event, itemEntity, serverLevel);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (entity instanceof ItemEntity itemEntity) {
+            handleItemTransformation(event, itemEntity, serverLevel);
         }
     }
 
