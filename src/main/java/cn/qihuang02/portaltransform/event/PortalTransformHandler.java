@@ -104,8 +104,8 @@ public class PortalTransformHandler {
     }
 
     private static boolean matchesItemDimensionRequirements(@NotNull ItemTransformRecipe recipe, ResourceKey<Level> currentDimKey, ResourceKey<Level> targetDimKey) {
-        return matchesDimension(recipe.getCurrentDimension(), currentDimKey) &&
-                matchesDimension(recipe.getTargetDimension(), targetDimKey);
+        return matchesDimension(recipe.getCurrent(), currentDimKey) &&
+                matchesDimension(recipe.getTarget(), targetDimKey);
     }
 
     private static boolean matchesDimension(@NotNull Optional<ResourceKey<Level>> requiredDim, @NotNull ResourceKey<Level> actualDim) {

@@ -7,7 +7,6 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -27,8 +26,7 @@ import java.util.Optional;
 
 public record ItemTransformRecipe(
         Ingredient inputIngredient,
-        Optional<ResourceKey<Level>> currentDimension,
-        Optional<ResourceKey<Level>> targetDimension,
+        Dimensions dimensions,
         ItemStack result,
         Optional<List<Byproducts>> byproducts,
         float transformChance
@@ -96,24 +94,23 @@ public record ItemTransformRecipe(
         return byproducts.map(ArrayList::new);
     }
 
+    public Optional<ResourceKey<Level>> getCurrent() {
+        return dimensions.current();
+    }
+
+    public Optional<ResourceKey<Level>> getTarget() {
+        return dimensions.target();
+    }
+
     @Override
     public @NotNull ItemStack getResultItem(HolderLookup.@NotNull Provider registries) {
         return result.copy();
     }
 
-    public Optional<ResourceKey<Level>> getCurrentDimension() {
-        return currentDimension;
-    }
-
-    public Optional<ResourceKey<Level>> getTargetDimension() {
-        return targetDimension;
-    }
-
     public static class Serializer implements RecipeSerializer<ItemTransformRecipe> {
         public static final StreamCodec<RegistryFriendlyByteBuf, ItemTransformRecipe> STREAM_CODEC = StreamCodec.composite(
                 Ingredient.CONTENTS_STREAM_CODEC, ItemTransformRecipe::inputIngredient,
-                ByteBufCodecs.optional(ResourceKey.streamCodec(Registries.DIMENSION)), ItemTransformRecipe::currentDimension,
-                ByteBufCodecs.optional(ResourceKey.streamCodec(Registries.DIMENSION)), ItemTransformRecipe::targetDimension,
+                Dimensions.STREAM_CODEC, ItemTransformRecipe::dimensions,
                 ItemStack.STREAM_CODEC, ItemTransformRecipe::result,
                 ByteBufCodecs.optional(ByteBufCodecs.collection(ArrayList::new, Byproducts.STREAM_CODEC)), ItemTransformRecipe::byproducts,
                 ByteBufCodecs.FLOAT, ItemTransformRecipe::transformChance,
@@ -123,8 +120,7 @@ public record ItemTransformRecipe(
         private static final MapCodec<ItemTransformRecipe> BASE_CODEC = RecordCodecBuilder.mapCodec(
                 instance -> instance.group(
                         Ingredient.CODEC_NONEMPTY.fieldOf("input").forGetter(ItemTransformRecipe::inputIngredient),
-                        ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("current_dimension").forGetter(ItemTransformRecipe::currentDimension),
-                        ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("target_dimension").forGetter(ItemTransformRecipe::targetDimension),
+                        Dimensions.CODEC.fieldOf("dimensions").forGetter(ItemTransformRecipe::dimensions),
                         ItemStack.STRICT_CODEC.fieldOf("result").forGetter(ItemTransformRecipe::result),
                         Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(ItemTransformRecipe::byproducts),
                         Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0f).forGetter(ItemTransformRecipe::transformChance)

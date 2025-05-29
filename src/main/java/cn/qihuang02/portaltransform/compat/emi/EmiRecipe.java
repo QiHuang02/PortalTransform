@@ -96,7 +96,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     public void addWidgets(@NotNull WidgetHolder widgets) {
         int centerX = (getDisplayWidth() / 2) - 8;
 
-        widgets.addSlot(input, centerX, 2).appendTooltip(() -> createCombinedTooltip(recipe.currentDimension(), true));
+        widgets.addSlot(input, centerX, 2).appendTooltip(() -> createCombinedTooltip(recipe.getCurrent(), true));
 
         widgets.addTexture(
                 TEXTURE_TRANSFORM,
@@ -106,7 +106,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                 13, 16,
                 13, 16
         );
-        widgets.addSlot(output, centerX, 40).recipeContext(this).appendTooltip(() -> createCombinedTooltip(recipe.targetDimension(), false));
+        widgets.addSlot(output, centerX, 40).recipeContext(this).appendTooltip(() -> createCombinedTooltip(recipe.getTarget(), false));
         widgets.addTexture(
                 TEXTURE_BIGSLOT,
                 34, 60,
