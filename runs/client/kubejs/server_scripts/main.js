@@ -6,8 +6,10 @@ ServerEvents.recipes((event) => {
         "minecraft:cobblestone",
         "minecraft:prismarine",
         0.1,
-        "overworld",
-        "the_nether",
+        {
+            current: "minecraft:overworld",
+            target: "minecraft:the_nether"
+        },
         [
             Byproduct.of("minecraft:redstone", 0.8, 1, 4)
         ]

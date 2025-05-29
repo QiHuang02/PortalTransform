@@ -8,6 +8,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -15,7 +17,10 @@ public record Dimensions(
         Optional<ResourceKey<Level>> current,
         Optional<ResourceKey<Level>> target
 ) {
-    public static final Dimensions EMPTY = new Dimensions(Optional.empty(), Optional.empty());
+    @Contract(" -> new")
+    public static @NotNull Dimensions empty() {
+        return new Dimensions(Optional.empty(), Optional.empty());
+    }
 
     public static final Codec<Dimensions> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ResourceKey.codec(Registries.DIMENSION).optionalFieldOf("current").forGetter(dr -> dr.current),
