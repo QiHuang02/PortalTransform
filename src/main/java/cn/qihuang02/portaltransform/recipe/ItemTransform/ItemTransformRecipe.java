@@ -26,9 +26,10 @@ import java.util.Optional;
 
 public record ItemTransformRecipe(
         Ingredient inputIngredient,
-        Dimensions dimensions,
         ItemStack result,
         Optional<List<Byproducts>> byproducts,
+        Dimensions dimensions,
+        Optional<Weather> weather,
         float transformChance
 ) implements Recipe<SimpleItemInput> {
     private static final int MAX_BYPRODUCT_TYPES = 9;
@@ -102,6 +103,10 @@ public record ItemTransformRecipe(
         return dimensions.target();
     }
 
+    public Optional<Weather> getWeather() {
+        return weather;
+    }
+
     @Override
     public @NotNull ItemStack getResultItem(HolderLookup.@NotNull Provider registries) {
         return result.copy();
@@ -110,9 +115,10 @@ public record ItemTransformRecipe(
     public static class Serializer implements RecipeSerializer<ItemTransformRecipe> {
         public static final StreamCodec<RegistryFriendlyByteBuf, ItemTransformRecipe> STREAM_CODEC = StreamCodec.composite(
                 Ingredient.CONTENTS_STREAM_CODEC, ItemTransformRecipe::inputIngredient,
-                Dimensions.STREAM_CODEC, ItemTransformRecipe::dimensions,
                 ItemStack.STREAM_CODEC, ItemTransformRecipe::result,
                 ByteBufCodecs.optional(ByteBufCodecs.collection(ArrayList::new, Byproducts.STREAM_CODEC)), ItemTransformRecipe::byproducts,
+                Dimensions.STREAM_CODEC, ItemTransformRecipe::dimensions,
+                ByteBufCodecs.optional(Weather.STREAM_CODEC), ItemTransformRecipe::weather,
                 ByteBufCodecs.FLOAT, ItemTransformRecipe::transformChance,
                 ItemTransformRecipe::new
         );
@@ -120,9 +126,10 @@ public record ItemTransformRecipe(
         private static final MapCodec<ItemTransformRecipe> BASE_CODEC = RecordCodecBuilder.mapCodec(
                 instance -> instance.group(
                         Ingredient.CODEC_NONEMPTY.fieldOf("input").forGetter(ItemTransformRecipe::inputIngredient),
-                        Dimensions.CODEC.fieldOf("dimensions").forGetter(ItemTransformRecipe::dimensions),
                         ItemStack.STRICT_CODEC.fieldOf("result").forGetter(ItemTransformRecipe::result),
                         Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(ItemTransformRecipe::byproducts),
+                        Dimensions.CODEC.fieldOf("dimensions").forGetter(ItemTransformRecipe::dimensions),
+                        Weather.CODEC.optionalFieldOf("weather").forGetter(ItemTransformRecipe::weather),
                         Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0f).forGetter(ItemTransformRecipe::transformChance)
                 ).apply(instance, ItemTransformRecipe::new)
         );

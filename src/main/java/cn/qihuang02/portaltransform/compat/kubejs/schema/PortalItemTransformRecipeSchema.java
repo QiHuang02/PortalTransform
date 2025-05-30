@@ -2,9 +2,11 @@ package cn.qihuang02.portaltransform.compat.kubejs.schema;
 
 import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.DimensionsComponent;
+import cn.qihuang02.portaltransform.compat.kubejs.components.WeatherComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.recipe.ItemTransformKubeRecipe;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Dimensions;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import dev.latvian.mods.kubejs.recipe.RecipeKey;
 import dev.latvian.mods.kubejs.recipe.component.IngredientComponent;
 import dev.latvian.mods.kubejs.recipe.component.ItemStackComponent;
@@ -24,6 +26,9 @@ public interface PortalItemTransformRecipeSchema {
     RecipeKey<Dimensions> DIMENSIONS = DimensionsComponent.DIMENSIONS
             .otherKey("dimensions").optional(Dimensions.empty());
 
+    RecipeKey<Weather> WEATHER = WeatherComponent.WEATHER
+            .otherKey("weather").optional(Weather.ANY);
+
     RecipeKey<List<Byproducts>> BYPRODUCTS = ByproductsComponent.LIST
             .otherKey("byproducts").defaultOptional();
     RecipeKey<Float> TRANSFORM_CHANCE = NumberComponent.FLOAT
@@ -32,8 +37,9 @@ public interface PortalItemTransformRecipeSchema {
     RecipeSchema PORTAL_TRANSFORM = new RecipeSchema(
             INPUT,
             RESULT,
-            TRANSFORM_CHANCE,
+            BYPRODUCTS,
             DIMENSIONS,
-            BYPRODUCTS
+            WEATHER,
+            TRANSFORM_CHANCE
     ).factory(ItemTransformKubeRecipe.FACTORY);
 }

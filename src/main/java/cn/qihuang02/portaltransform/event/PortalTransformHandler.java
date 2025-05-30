@@ -2,10 +2,11 @@ package cn.qihuang02.portaltransform.event;
 
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
-import cn.qihuang02.portaltransform.recipe.Recipes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.SimpleItemInput;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
+import cn.qihuang02.portaltransform.recipe.Recipes;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -23,7 +24,6 @@ import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -71,7 +71,11 @@ public class PortalTransformHandler {
         ResourceKey<Level> targetDimKey = event.getDimension();
 
         findItemRecipe(itemEntity, serverLevel)
-                .filter(holder -> matchesItemDimensionRequirements(holder.value(), currentDimKey, targetDimKey))
+                .filter(holder -> {
+                    ItemTransformRecipe recipe = holder.value();
+                    return matchesItemDimensionRequirements(recipe, currentDimKey, targetDimKey) &&
+                            matchesWeather(recipe, serverLevel);
+                })
                 .ifPresent(holder -> {
                     ItemTransformRecipe recipe = holder.value();
                     float chance = recipe.transformChance();
@@ -112,6 +116,29 @@ public class PortalTransformHandler {
         return requiredDim.map(actualDim::equals).orElse(true);
     }
 
+    private static boolean matchesWeather(ItemTransformRecipe recipe, ServerLevel serverLevel) {
+        Optional<Weather> weatherOpt = recipe.getWeather();
+
+        if (weatherOpt.isEmpty()) {
+            return true;
+        }
+
+        Weather weather = weatherOpt.get();
+
+        if (weather == Weather.ANY) {
+            return true;
+        }
+
+        boolean isThundering = serverLevel.isThundering();
+        boolean isRaining = serverLevel.isRaining();
+
+        return switch (weather) {
+            case CLEAR -> !isThundering && !isRaining;
+            case RAIN -> isRaining && !isThundering;
+            case THUNDER -> isThundering;
+            default -> true;
+        };
+    }
 
     private static void transformItem(ItemEntity itemEntity, ServerLevel level, ItemTransformRecipe recipe) {
         Objects.requireNonNull(itemEntity, "ItemEntity cannot be null");
