@@ -1,6 +1,7 @@
 package cn.qihuang02.portaltransform.compat.kubejs;
 
 import cn.qihuang02.portaltransform.compat.kubejs.binding.ByproductsBinding;
+import cn.qihuang02.portaltransform.compat.kubejs.binding.LevelBinding;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.DimensionsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.LevelComponent;
@@ -20,6 +21,7 @@ public class KubeJSPlugin implements dev.latvian.mods.kubejs.plugin.KubeJSPlugin
     public void registerBindings(@NotNull BindingRegistry bindings) {
         if (bindings.type().isServer()) {
             bindings.add("Byproduct", ByproductsBinding.class);
+            bindings.add("Level", LevelBinding.class);
         }
     }
 

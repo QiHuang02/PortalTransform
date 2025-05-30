@@ -5,10 +5,7 @@ ServerEvents.recipes((event) => {
         [
                  Byproduct.of("minecraft:redstone", 0.8, 1, 4)
         ],
-        {
-            current: "minecraft:overworld",
-            target: "minecraft:the_nether"
-        },
+        [Level.OVERWORLD, Level.THE_NETHER],
         "any",
         0.1
     );
