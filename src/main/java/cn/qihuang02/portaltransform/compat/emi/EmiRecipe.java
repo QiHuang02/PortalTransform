@@ -3,6 +3,7 @@ package cn.qihuang02.portaltransform.compat.emi;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.ItemTransformRecipe;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
@@ -96,7 +97,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     public void addWidgets(@NotNull WidgetHolder widgets) {
         int centerX = (getDisplayWidth() / 2) - 8;
 
-        widgets.addSlot(input, centerX, 2).appendTooltip(() -> createCombinedTooltip(recipe.getCurrent(), true));
+        widgets.addSlot(input, centerX, 2).appendTooltip(() -> createCombinedTooltip(recipe.getCurrent(), recipe.getWeather(), true));
 
         widgets.addTexture(
                 TEXTURE_TRANSFORM,
@@ -106,7 +107,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                 13, 16,
                 13, 16
         );
-        widgets.addSlot(output, centerX, 40).recipeContext(this).appendTooltip(() -> createCombinedTooltip(recipe.getTarget(), false));
+        widgets.addSlot(output, centerX, 40).recipeContext(this).appendTooltip(() -> createCombinedTooltip(recipe.getTarget(), Optional.empty(), false));
         widgets.addTexture(
                 TEXTURE_BIGSLOT,
                 34, 60,
@@ -119,12 +120,21 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         addByproductsSlots(widgets);
     }
 
-    private ClientTooltipComponent createCombinedTooltip(Optional<ResourceKey<Level>> dimensionKey, boolean isInput) {
+    private ClientTooltipComponent createCombinedTooltip(
+            Optional<ResourceKey<Level>> dimensionKey,
+            Optional<Weather> weather,
+            boolean isInput
+    ) {
         List<Component> lines = new ArrayList<>();
 
         lines.add(getDimensionComponent(dimensionKey));
 
         if (isInput) {
+            Component weatherComponent = getWeatherComponent(weather);
+            if (weatherComponent != null) {
+                lines.add(weatherComponent);
+            }
+
             Component chanceComponent = getTransformChanceComponent();
             if (chanceComponent != null) {
                 lines.add(chanceComponent);
@@ -148,6 +158,20 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                                 .orElse(Component.translatable("tooltip.portaltransform.item_transform.no_requirement")
                                         .withStyle(ChatFormatting.GREEN))
                 );
+    }
+
+    private Component getWeatherComponent(Optional<Weather> weather) {
+        if (weather.isEmpty() || weather.get() == Weather.ANY) {
+
+        }
+
+        Weather actualWeather = weather.orElse(Weather.ANY);
+        String weatherName = actualWeather.getSerializedName();
+        String langKey = "tooltip.portaltransform.item_transform.weather." + weatherName;
+
+        return Component.translatable("tooltip.portaltransform.item_transform.weather")
+                .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
+                .append(Component.translatable(langKey).withStyle(ChatFormatting.AQUA));
     }
 
     @Nullable

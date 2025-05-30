@@ -7,5 +7,10 @@
   "tooltip.portaltransform.item_transform.dimension": "Dimension Requirement",
   "tooltip.portaltransform.item_transform.no_requirement": "No requirement",
   "tooltip.portaltransform.item_transform.transform_chance": "Transform Chance: %s",
-  "tooltip.portaltransform.item_transform.unknown_dimension": "Unknown dimensions"
+  "tooltip.portaltransform.item_transform.unknown_dimension": "Unknown dimensions",
+  "tooltip.portaltransform.item_transform.weather": "Weather",
+  "tooltip.portaltransform.item_transform.weather.any": "Any",
+  "tooltip.portaltransform.item_transform.weather.clear": "Clear",
+  "tooltip.portaltransform.item_transform.weather.rain": "Rain",
+  "tooltip.portaltransform.item_transform.weather.thunder": "Thunder"
 }

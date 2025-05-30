@@ -14,7 +14,7 @@ public class LangProvider extends LanguageProvider {
 
         this.add("emi.category.portaltransform.item_transform", "Item Transform");
 
-        this.add("tooltip.portaltransform.item_transform.dimension", "Dimension Requirement");
+        this.add("tooltip.portaltransform.item_transform.dimension", "Dimension");
         this.add("tooltip.portaltransform.item_transform.unknown_dimension", "Unknown dimensions");
         this.add("tooltip.portaltransform.item_transform.no_requirement", "No requirement");
 
@@ -24,5 +24,11 @@ public class LangProvider extends LanguageProvider {
         this.add("tooltip.portaltransform.item_transform.byproduct.max_count", "Max Count: %s");
 
         this.add("tooltip.portaltransform.item_transform.transform_chance", "Transform Chance: %s");
+
+        this.add("tooltip.portaltransform.item_transform.weather", "Weather");
+        this.add("tooltip.portaltransform.item_transform.weather.clear", "Clear");
+        this.add("tooltip.portaltransform.item_transform.weather.rain", "Rain");
+        this.add("tooltip.portaltransform.item_transform.weather.thunder", "Thunder");
+        this.add("tooltip.portaltransform.item_transform.weather.any", "Any");
     }
 }
