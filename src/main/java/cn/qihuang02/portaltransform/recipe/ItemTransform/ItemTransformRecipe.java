@@ -28,7 +28,7 @@ public record ItemTransformRecipe(
         Ingredient inputIngredient,
         ItemStack result,
         Optional<List<Byproducts>> byproducts,
-        Dimensions dimensions,
+        Optional<Dimensions> dimensions,
         Optional<Weather> weather,
         float transformChance
 ) implements Recipe<SimpleItemInput> {
@@ -96,11 +96,11 @@ public record ItemTransformRecipe(
     }
 
     public Optional<ResourceKey<Level>> getCurrent() {
-        return dimensions.current();
+        return dimensions().flatMap(Dimensions::current);
     }
 
     public Optional<ResourceKey<Level>> getTarget() {
-        return dimensions.target();
+        return dimensions().flatMap(Dimensions::target);
     }
 
     public Optional<Weather> getWeather() {
@@ -117,7 +117,7 @@ public record ItemTransformRecipe(
                 Ingredient.CONTENTS_STREAM_CODEC, ItemTransformRecipe::inputIngredient,
                 ItemStack.STREAM_CODEC, ItemTransformRecipe::result,
                 ByteBufCodecs.optional(ByteBufCodecs.collection(ArrayList::new, Byproducts.STREAM_CODEC)), ItemTransformRecipe::byproducts,
-                Dimensions.STREAM_CODEC, ItemTransformRecipe::dimensions,
+                ByteBufCodecs.optional(Dimensions.STREAM_CODEC), ItemTransformRecipe::dimensions,
                 ByteBufCodecs.optional(Weather.STREAM_CODEC), ItemTransformRecipe::weather,
                 ByteBufCodecs.FLOAT, ItemTransformRecipe::transformChance,
                 ItemTransformRecipe::new
@@ -128,9 +128,9 @@ public record ItemTransformRecipe(
                         Ingredient.CODEC_NONEMPTY.fieldOf("input").forGetter(ItemTransformRecipe::inputIngredient),
                         ItemStack.STRICT_CODEC.fieldOf("result").forGetter(ItemTransformRecipe::result),
                         Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(ItemTransformRecipe::byproducts),
-                        Dimensions.CODEC.fieldOf("dimensions").forGetter(ItemTransformRecipe::dimensions),
+                        Dimensions.CODEC.optionalFieldOf("dimensions").forGetter(ItemTransformRecipe::dimensions),
                         Weather.CODEC.optionalFieldOf("weather").forGetter(ItemTransformRecipe::weather),
-                        Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0f).forGetter(ItemTransformRecipe::transformChance)
+                        Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0F).forGetter(ItemTransformRecipe::transformChance)
                 ).apply(instance, ItemTransformRecipe::new)
         );
 
