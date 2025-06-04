@@ -9,7 +9,8 @@ import dev.latvian.mods.rhino.type.TypeInfo;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DimensionsComponent implements RecipeComponent<Dimensions> {
     public static final DimensionsComponent DIMENSIONS = new DimensionsComponent();
@@ -36,53 +37,59 @@ public class DimensionsComponent implements RecipeComponent<Dimensions> {
 
     @Override
     public Dimensions wrap(Context cx, KubeRecipe recipe, Object from) {
-        switch (from) {
-            case null -> {
+        if (from == null || from instanceof Undefined) {
+            return Dimensions.empty();
+        }
+
+        if (from instanceof Dimensions dimensionsInstance) {
+            return dimensionsInstance;
+        }
+
+        if (from instanceof NativeArray jsArray) {
+            long length = jsArray.getLength();
+            List<ResourceKey<Level>> dimsList = new ArrayList<>();
+
+            if (length == 0) {
                 return Dimensions.empty();
             }
-            case Undefined ignored -> {
-                return Dimensions.empty();
-            }
-            case Dimensions dimensions -> {
-                return dimensions;
-            }
-            case NativeArray jsArray -> {
-                long length = jsArray.getLength();
-                Optional<ResourceKey<Level>> currentDimKey = Optional.empty();
-                Optional<ResourceKey<Level>> targetDimKey = Optional.empty();
 
-                if (length == 0) {
-                    return Dimensions.empty();
+            if (length == 2) {
+                Object currentRaw = jsArray.getFirst();
+                if (currentRaw == null || currentRaw == ScriptableObject.NOT_FOUND || currentRaw instanceof Undefined) {
+                    throw ScriptRuntime.typeError(cx, "Dimensions array element at index 0 (current dimension) cannot be null or undefined.");
+                }
+                try {
+                    ResourceKey<Level> currentDimKey = LevelComponent.DIMENSION.wrap(cx, recipe, currentRaw);
+                    dimsList.add(currentDimKey);
+                } catch (RhinoException e) {
+                    throw ScriptRuntime.typeError(cx, "Invalid 'current' dimension at index 0 in dimensions array: " + e.getMessage());
+                } catch (Exception e) {
+                    throw ScriptRuntime.typeError(cx, "Error parsing 'current' dimension at index 0: " + e.getMessage());
                 }
 
-                if (length == 2) {
-                    Object currentRaw = jsArray.getFirst();
-                    if (currentRaw != null && currentRaw != ScriptableObject.NOT_FOUND && !(currentRaw instanceof Undefined)) {
-                        try {
-                            currentDimKey = Optional.ofNullable(LevelComponent.DIMENSION.wrap(cx, recipe, currentRaw));
-                        } catch (Exception e) {
-                            throw ScriptRuntime.typeError(cx, "Invalid 'current' dimension at index 0 in dimensions array: " + e.getMessage());
-                        }
-                    }
-
-                    Object targetRaw = jsArray.get(1);
-                    if (targetRaw != null && targetRaw != ScriptableObject.NOT_FOUND && !(targetRaw instanceof Undefined)) {
-                        try {
-                            targetDimKey = Optional.ofNullable(LevelComponent.DIMENSION.wrap(cx, recipe, targetRaw));
-                        } catch (Exception e) {
-                            throw ScriptRuntime.typeError(cx, "Invalid 'target' dimension at index 1 in dimensions array: " + e.getMessage());
-                        }
-                    }
-
-                    return new Dimensions(currentDimKey, targetDimKey);
-                } else {
-                    throw ScriptRuntime.typeError(cx, "Expected a Dimensions array with 0 or 2 elements (e.g., ['minecraft:overworld', 'minecraft:the_nether'] or []), but got " + length + " elements.");
+                Object targetRaw = jsArray.get(1);
+                if (targetRaw == null || targetRaw == ScriptableObject.NOT_FOUND || targetRaw instanceof Undefined) {
+                    throw ScriptRuntime.typeError(cx, "Dimensions array element at index 1 (target dimension) cannot be null or undefined.");
                 }
-            }
-            default -> {
+                try {
+                    ResourceKey<Level> targetDimKey = LevelComponent.DIMENSION.wrap(cx, recipe, targetRaw);
+                    dimsList.add(targetDimKey);
+                } catch (RhinoException e) {
+                    throw ScriptRuntime.typeError(cx, "Invalid 'target' dimension at index 1 in dimensions array: " + e.getMessage());
+                } catch (Exception e) {
+                    throw ScriptRuntime.typeError(cx, "Error parsing 'target' dimension at index 1: " + e.getMessage());
+                }
+                try {
+                    return new Dimensions(dimsList);
+                } catch (IllegalArgumentException e) {
+                    throw ScriptRuntime.typeError(cx, "Failed to create Dimensions object: " + e.getMessage());
+                }
+
+            } else {
+                throw ScriptRuntime.typeError(cx, "Dimensions array must contain exactly 0 or 2 elements (e.g., ['minecraft:overworld', 'minecraft:the_nether'] or []), but found " + length + " elements.");
             }
         }
 
-        throw ScriptRuntime.typeError(cx, "Expected a Dimensions array (e.g., ['minecraft:overworld', 'minecraft:the_nether'] or []) or null/undefined for 'dimensions' field, but got " + from.getClass().getSimpleName());
+        throw ScriptRuntime.typeError(cx, "Invalid type for 'dimensions' field. Expected an array of 0 or 2 dimension IDs (e.g., ['minecraft:overworld', 'minecraft:the_nether']), null, or undefined, but got " + from.getClass().getSimpleName() + ".");
     }
 }
