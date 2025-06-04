@@ -6,7 +6,7 @@ ServerEvents.recipes((event) => {
                  Byproduct.of("minecraft:redstone", 0.8, 1, 4)
         ],
         ["minecraft:overworld", "minecraft:the_nether"],
-        "rain",
-        1
+        "any",
+        0.1
     );
 })
