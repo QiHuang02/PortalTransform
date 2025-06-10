@@ -52,12 +52,6 @@ public record ItemTransformRecipe(
             return DataResult.error(() -> String.format(ERROR_TOO_MANY_BYPRODUCTS, MAX_BYPRODUCT_TYPES, byproducts.size()));
         }
 
-        for (int i = 0; i < byproducts.size(); i++) {
-            String error = Byproducts.validate(byproducts.get(i), i);
-            if (error != null) {
-                return DataResult.error(() -> error);
-            }
-        }
         return DataResult.success(recipe);
     }
 

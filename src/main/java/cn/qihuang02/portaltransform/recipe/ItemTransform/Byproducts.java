@@ -6,19 +6,17 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 public record Byproducts(
         ItemStack byproduct,
         float chance,
         CountRange counts
 ) {
-    public static final String ERROR_EMPTY_BYPRODUCT = "Byproduct byproduct at index %d cannot be empty";
-    public static final String ERROR_INVALID_COUNTS = "Byproduct at index %d has invalid min/max counts";
-    public static final String ERROR_INVALID_CHANCE = "Byproduct at index %d has invalid chance (must be > 0 and <= 1)";
-
     public static final MapCodec<Byproducts> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             ItemStack.STRICT_CODEC.fieldOf("byproduct").forGetter(Byproducts::byproduct),
             Codec.FLOAT.fieldOf("chance").forGetter(Byproducts::chance),
@@ -32,20 +30,21 @@ public record Byproducts(
             Byproducts::new
     );
 
-
-    public static @Nullable String validate(@NotNull Byproducts byproduct, int index) {
-        if (byproduct.byproduct().isEmpty()) {
-            return String.format(ERROR_EMPTY_BYPRODUCT, index);
+    public Byproducts {
+        if (byproduct == null || byproduct.isEmpty()) {
+            throw new IllegalArgumentException("Byproduct ItemStack cannot be null or empty.");
         }
-
-        if (byproduct.counts().min() <= 0 || byproduct.counts().max() < byproduct.counts().min()) {
-            return String.format(ERROR_INVALID_COUNTS, index);
+        if (chance <= 0.0f || chance > 1.0f) {
+            // 注意：允许1.0，原代码不允许，这里修正为 <= 0 或 > 1 才报错
+            throw new IllegalArgumentException("Byproduct chance must be between 0.0 (exclusive) and 1.0 (inclusive), got: " + chance);
         }
+    }
 
-        if (byproduct.chance() <= 0 || byproduct.chance() > 1) {
-            return String.format(ERROR_INVALID_CHANCE, index);
+    public Optional<ItemStack> getResult(@NotNull RandomSource random) {
+        if (random.nextFloat() < this.chance) {
+            int count = this.counts.getRandomCount(random);
+            return Optional.of(this.byproduct.copyWithCount(count));
         }
-
-        return null;
+        return Optional.empty();
     }
 }

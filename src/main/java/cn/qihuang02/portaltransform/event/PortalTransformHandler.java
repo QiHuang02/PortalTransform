@@ -116,7 +116,7 @@ public class PortalTransformHandler {
         return requiredDim.map(actualDim::equals).orElse(true);
     }
 
-    private static boolean matchesWeather(ItemTransformRecipe recipe, ServerLevel serverLevel) {
+    private static boolean matchesWeather(@NotNull ItemTransformRecipe recipe, ServerLevel serverLevel) {
         Optional<Weather> weatherOpt = recipe.getWeather();
 
         if (weatherOpt.isEmpty()) {
@@ -162,19 +162,10 @@ public class PortalTransformHandler {
 
         recipe.getByproducts().ifPresent(byproducts -> {
             for (Byproducts definition : byproducts) {
-                if (!definition.counts().isValid() || definition.byproduct().isEmpty() || definition.chance() <= 0)
-                    continue;
-                for (int index = 0; index < originalInputCount; index++) {
-                    if (random.nextFloat() < definition.chance()) {
-                        int countToSpawn = definition.counts().min();
-                        if (definition.counts().max() > definition.counts().min()) {
-                            countToSpawn = random.nextInt(definition.counts().min(), definition.counts().max() + 1);
-                        }
-                        if (countToSpawn > 0) {
-                            ItemStack byproductStack = definition.byproduct().copyWithCount(countToSpawn);
-                            spawnItemByproduct(level, pos, motion, byproductStack, random);
-                        }
-                    }
+                for (int i = 0; i < originalInputCount; i++) {
+                    definition.getResult(random).ifPresent(byproductStack ->
+                            spawnItemByproduct(level, pos, motion, byproductStack, random)
+                    );
                 }
             }
         });
