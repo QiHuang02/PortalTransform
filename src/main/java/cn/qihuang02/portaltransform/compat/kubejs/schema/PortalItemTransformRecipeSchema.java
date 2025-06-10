@@ -24,15 +24,16 @@ public interface PortalItemTransformRecipeSchema {
             .outputKey("result");
 
     RecipeKey<Dimensions> DIMENSIONS = DimensionsComponent.DIMENSIONS
-            .otherKey("dimensions").optional(Dimensions.empty());
+            .otherKey("dimensions").optional(Dimensions.empty()).functionNames(List.of("dimensions"));
 
     RecipeKey<Weather> WEATHER = WeatherComponent.WEATHER
-            .otherKey("weather").optional(Weather.ANY);
+            .otherKey("weather").optional(Weather.ANY).functionNames(List.of("weather"));
 
     RecipeKey<List<Byproducts>> BYPRODUCTS = ByproductsComponent.LIST
-            .otherKey("byproducts").defaultOptional();
+            .otherKey("byproducts").defaultOptional().functionNames(List.of("byproducts"));
+
     RecipeKey<Float> TRANSFORM_CHANCE = NumberComponent.FLOAT
-            .otherKey("transform_chance").optional(1.0F);
+            .otherKey("transform_chance").optional(1.0F).functionNames(List.of("chance"));
 
     RecipeSchema PORTAL_TRANSFORM = new RecipeSchema(
             INPUT,
