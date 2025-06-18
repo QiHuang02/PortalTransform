@@ -7,6 +7,8 @@ import cn.qihuang02.portaltransform.recipe.ItemTransform.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.SimpleItemInput;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import cn.qihuang02.portaltransform.recipe.Recipes;
+import cn.qihuang02.portaltransform.util.InventoryUtil;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -96,7 +98,7 @@ public class PortalTransformHandler {
     }
 
     private static Optional<RecipeHolder<ItemTransformRecipe>> findItemRecipe(@NotNull ItemEntity itemEntity, ServerLevel currentLevel) {
-        ItemStack inputStack = itemEntity.getItem();
+        ItemStack inputStack = itemEntity.getItem().copyWithCount(1);
         return ITEM_RECIPE_CACHE.computeIfAbsent(inputStack, stack -> {
             RecipeManager recipeManager = currentLevel.getRecipeManager();
             return recipeManager.getRecipeFor(
@@ -145,15 +147,23 @@ public class PortalTransformHandler {
         Objects.requireNonNull(level, "Level cannot be null");
         Objects.requireNonNull(recipe, "Recipe cannot be null");
 
+        BlockPos spawnPos = itemEntity.blockPosition();
         Vec3 pos = itemEntity.position();
         Vec3 motion = itemEntity.getDeltaMovement();
         int originalInputCount = itemEntity.getItem().getCount();
         RandomSource random = level.random;
 
-        ItemStack outputStack = recipe.getResultItem(level.registryAccess());
+        ItemStack outputStack = recipe.getResultItem(level.registryAccess()).copy();
         if (!outputStack.isEmpty()) {
-            outputStack.setCount(originalInputCount);
-            itemEntity.setItem(outputStack);
+            outputStack.setCount(originalInputCount * outputStack.getCount());
+
+            ItemStack remainingOutput = InventoryUtil.tryPlaceInNearbyInv(level, spawnPos, outputStack);
+
+            if (remainingOutput.isEmpty()) {
+                itemEntity.discard();
+            } else {
+                itemEntity.setItem(remainingOutput);
+            }
         } else {
             LOGGER.warn("Item Recipe {} resulted in an empty output stack!", recipe);
             itemEntity.discard();
@@ -163,15 +173,28 @@ public class PortalTransformHandler {
         recipe.getByproducts().ifPresent(byproducts -> {
             for (Byproducts definition : byproducts) {
                 for (int i = 0; i < originalInputCount; i++) {
-                    definition.getResult(random).ifPresent(byproductStack ->
-                            spawnItemByproduct(level, pos, motion, byproductStack, random)
-                    );
+                    if (random.nextFloat() < definition.chance()) {
+                        ItemStack byproductStack = definition.byproduct().copy();
+                        byproductStack.setCount(definition.counts().getRandomCount(random));
+                        spawnItemByproduct(level, pos, motion, byproductStack, random);
+                    }
+//                    definition.getResult(random).ifPresent(byproductStack ->
+//                            spawnItemByproduct(level, pos, motion, byproductStack, random)
+//                    );
                 }
             }
         });
     }
 
     private static void spawnItemByproduct(ServerLevel level, Vec3 pos, Vec3 motion, @NotNull ItemStack byproductStack, RandomSource random) {
+        BlockPos spawnPos = BlockPos.containing(pos);
+
+        ItemStack remainingByproduct = InventoryUtil.tryPlaceInNearbyInv(level, spawnPos, byproductStack);
+
+        if (remainingByproduct.isEmpty()) {
+            return;
+        }
+
         int maxStackSize = byproductStack.getMaxStackSize();
         int total = byproductStack.getCount();
 
