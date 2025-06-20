@@ -20,24 +20,20 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 import org.joml.Matrix4f;
 
 import java.util.*;
 
 public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
-    public static final ResourceLocation TEXTURE_TRANSFORM = PortalTransform.getRL("textures/gui/emi/transform.png");
-    public static final ResourceLocation TEXTURE_BIGSLOT = PortalTransform.getRL("textures/gui/emi/big_slot.png");
-    private static final int BYPRODUCT_GRID_X = 34;
-    private static final int BYPRODUCT_GRID_Y = 60;
-    private static final int GRID_CELL_SIZE = 18;
+    private static final ResourceLocation TEXTURE_GUI = PortalTransform.getRL("textures/gui/emi/gui.png");
 
     private final RecipeHolder<ItemTransformRecipe> recipeHolder;
     private final ItemTransformRecipe recipe;
     private final EmiIngredient input;
-    private final List<EmiStack> byproductsForDisplay;
+    private final List<EmiStack> byproducts;
     private final EmiStack output;
 
     public EmiRecipe(@NotNull RecipeHolder<ItemTransformRecipe> holder) {
@@ -48,7 +44,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         HolderLookup.Provider registries = Minecraft.getInstance().level != null ? Minecraft.getInstance().level.registryAccess() : null;
         this.output = registries != null ? EmiStack.of(recipe.getResultItem(registries)) : EmiStack.EMPTY;
 
-        this.byproductsForDisplay = recipe.byproducts()
+        this.byproducts = recipe.byproducts()
                 .map(byproducts -> byproducts.stream()
                         .map(def -> EmiStack.of(def.byproduct()))
                         .filter(stack -> !stack.isEmpty())
@@ -76,7 +72,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         List<EmiStack> outputs = new ArrayList<>();
         outputs.add(output);
 
-        outputs.addAll(byproductsForDisplay.stream()
+        outputs.addAll(byproducts.stream()
                 .limit(9)
                 .toList());
 
@@ -85,82 +81,77 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
 
     @Override
     public int getDisplayWidth() {
-        return 120;
+        return 185;
     }
 
     @Override
     public int getDisplayHeight() {
-        return 120;
+        return 125;
     }
 
     @Override
     public void addWidgets(@NotNull WidgetHolder widgets) {
-        int centerX = (getDisplayWidth() / 2) - 8;
-
-        widgets.addSlot(input, centerX, 2).appendTooltip(() -> createCombinedTooltip(recipe.getCurrent(), recipe.getWeather(), true));
-
         widgets.addTexture(
-                TEXTURE_TRANSFORM,
-                centerX + 2, 22,
-                13, 16,
+                TEXTURE_GUI,
                 0, 0,
-                13, 16,
-                13, 16
-        );
-        widgets.addSlot(output, centerX, 40).recipeContext(this).appendTooltip(() -> createCombinedTooltip(recipe.getTarget(), Optional.empty(), false));
-        widgets.addTexture(
-                TEXTURE_BIGSLOT,
-                34, 60,
-                54, 54,
+                185, 125,
                 0, 0,
-                54, 54,
-                54, 54
+                185, 125,
+                256, 256
         );
+
+        recipe.getWeather().ifPresent(weather -> {
+            int u = 0;
+            boolean shouldDrow = true;
+            switch (weather) {
+                case CLEAR -> u = 192;
+                case RAIN -> u = 208;
+                case THUNDER -> u = 224;
+                default -> shouldDrow = false;
+            }
+
+            if (shouldDrow) {
+                Component weatherLine = getWeatherComponent(recipe.getWeather());
+                widgets.addTexture(TEXTURE_GUI, 63, 25, 16, 16, u, 0, 16, 16, 256, 256)
+                        .tooltipText(weatherLine != null ? List.of(weatherLine) : Collections.emptyList());
+            }
+        });
+
+        widgets.addTooltipText(getDimensionTooltipLines(), 57, 46, 28, 28);
+
+        widgets.addSlot(input, 15, 54).drawBack(false).recipeContext(this);
+        widgets.addSlot(output, 107, 54).drawBack(false).recipeContext(this).appendTooltip(() -> {
+            Component chance = getTransformChanceComponent();
+            return chance != null ? createMultiLineTooltip(List.of(chance)) : createMultiLineTooltip(Collections.emptyList());
+        });
 
         addByproductsSlots(widgets);
     }
 
-    private ClientTooltipComponent createCombinedTooltip(
-            Optional<ResourceKey<Level>> dimensionKey,
-            Optional<Weather> weather,
-            boolean isInput
-    ) {
-        List<Component> lines = new ArrayList<>();
-
-        lines.add(getDimensionComponent(dimensionKey));
-
-        if (isInput) {
-            Component weatherComponent = getWeatherComponent(weather);
-            if (weatherComponent != null) {
-                lines.add(weatherComponent);
-            }
-
-            Component chanceComponent = getTransformChanceComponent();
-            if (chanceComponent != null) {
-                lines.add(chanceComponent);
-            }
-        }
-
-        return createMultiLineTooltip(lines);
-    }
-
     private @NotNull Component getDimensionComponent(@NotNull Optional<ResourceKey<Level>> dimensionKey) {
-        return Component.translatable("tooltip.portaltransform.item_transform.dimension")
-                .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
-                .append(
-                        dimensionKey.map(key -> {
-                                    ResourceLocation loc = key.location();
-                                    String dimensionLangKey = "dimension." + loc.getNamespace() + "." + loc.getPath();
-                                    return I18n.exists(dimensionLangKey)
-                                            ? Component.translatable(dimensionLangKey).withStyle(ChatFormatting.GOLD)
-                                            : Component.literal(loc.toString()).withStyle(ChatFormatting.YELLOW);
-                                })
-                                .orElse(Component.translatable("tooltip.portaltransform.item_transform.no_requirement")
-                                        .withStyle(ChatFormatting.GREEN))
-                );
+        return dimensionKey.map(key -> {
+                    ResourceLocation loc = key.location();
+                    String dimensionLangKey = "dimension." + loc.getNamespace() + "." + loc.getPath();
+                    return I18n.exists(dimensionLangKey)
+                            ? Component.translatable(dimensionLangKey).withStyle(ChatFormatting.GOLD)
+                            : Component.literal(loc.toString()).withStyle(ChatFormatting.YELLOW);
+                })
+                .orElse(Component.translatable("tooltip.portaltransform.item_transform.no_requirement") // "无要求"
+                        .withStyle(ChatFormatting.GREEN));
     }
 
-    private Component getWeatherComponent(Optional<Weather> weather) {
+    private @NotNull @Unmodifiable List<Component> getDimensionTooltipLines() {
+        Component from = getDimensionComponent(recipe.getCurrent());
+        Component to = getDimensionComponent(recipe.getTarget());
+
+        Component line = from.copy()
+                .append(Component.literal(" -> ").withStyle(ChatFormatting.GRAY))
+                .append(to);
+
+        return List.of(line);
+    }
+
+    private @NotNull Component getWeatherComponent(@NotNull Optional<Weather> weather) {
         if (weather.isEmpty() || weather.get() == Weather.ANY) {
 
         }
@@ -187,18 +178,23 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     }
 
     private void addByproductsSlots(WidgetHolder widgets) {
-        int index = 0;
-        for (EmiStack byproduct : byproductsForDisplay) {
-            if (index >= 9) break;
-            int[] pos = getGridPosition(index);
+        int[][] slotPositions = {
+                {107, 24}, {131, 30}, {151, 10},
+                {137, 54}, {163, 38}, {163, 70},
+                {107, 84}, {131, 78}, {151, 98}
+        };
 
-            int finalIndex = index;
-            widgets.addSlot(byproduct, pos[0], pos[1])
+        int slotCount = Math.min(byproducts.size(), slotPositions.length);
+
+        for (int i = 0; i < slotCount; i++) {
+            final int currentIndex = i;
+            int[] currentPos = slotPositions[currentIndex];
+
+            widgets.addSlot(byproducts.get(currentIndex), currentPos[0], currentPos[1])
                     .drawBack(false)
                     .appendTooltip(() ->
-                            createMultiLineTooltip(getByproductChanceTooltip(finalIndex))
+                            createMultiLineTooltip(getByproductChanceTooltip(currentIndex))
                     );
-            index++;
         }
     }
 
@@ -256,17 +252,6 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                     currentY += line.getHeight() + LINE_SPACING;
                 }
             }
-        };
-    }
-
-    @Contract(value = "_ -> new", pure = true)
-    private int @NotNull [] getGridPosition(int index) {
-        int row = index / 3;
-        int col = index % 3;
-
-        return new int[]{
-                BYPRODUCT_GRID_X + col * (GRID_CELL_SIZE),
-                BYPRODUCT_GRID_Y + row * (GRID_CELL_SIZE),
         };
     }
 }
