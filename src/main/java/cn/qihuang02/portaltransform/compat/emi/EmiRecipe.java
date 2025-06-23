@@ -2,7 +2,7 @@ package cn.qihuang02.portaltransform.compat.emi;
 
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.ItemTransformRecipe;
+import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;

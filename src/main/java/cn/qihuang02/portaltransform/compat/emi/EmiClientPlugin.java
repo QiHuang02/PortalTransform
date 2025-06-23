@@ -1,7 +1,7 @@
 package cn.qihuang02.portaltransform.compat.emi;
 
 import cn.qihuang02.portaltransform.PortalTransform;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.ItemTransformRecipe;
+import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.Recipes;
 import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiPlugin;

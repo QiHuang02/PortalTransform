@@ -1,16 +1,14 @@
 {
   "emi.category.portaltransform.item_transform": "Item Transform",
-  "tooltip.portaltransform.item_transform.byproduct": "Byproduct",
-  "tooltip.portaltransform.item_transform.byproduct.chance": "Chance: %s",
-  "tooltip.portaltransform.item_transform.byproduct.max_count": "Max Count: %s",
-  "tooltip.portaltransform.item_transform.byproduct.min_count": "Min Count: %s",
-  "tooltip.portaltransform.item_transform.dimension": "Dimension Requirement",
-  "tooltip.portaltransform.item_transform.no_requirement": "No requirement",
-  "tooltip.portaltransform.item_transform.transform_chance": "Transform Chance: %s",
-  "tooltip.portaltransform.item_transform.unknown_dimension": "Unknown dimensions",
-  "tooltip.portaltransform.item_transform.weather": "Weather",
-  "tooltip.portaltransform.item_transform.weather.any": "Any",
-  "tooltip.portaltransform.item_transform.weather.clear": "Clear",
-  "tooltip.portaltransform.item_transform.weather.rain": "Rain",
-  "tooltip.portaltransform.item_transform.weather.thunder": "Thunder"
+  "tooltip.portaltransform.item_transform.byproduct": "副产物",
+  "tooltip.portaltransform.item_transform.byproduct.chance": "概率: %s",
+  "tooltip.portaltransform.item_transform.byproduct.max_count": "最大数量: %s",
+  "tooltip.portaltransform.item_transform.byproduct.min_count": "最小数量: %s",
+  "tooltip.portaltransform.item_transform.no_requirement": "无",
+  "tooltip.portaltransform.item_transform.transform_chance": "转换概率: %s",
+  "tooltip.portaltransform.item_transform.weather": "天气",
+  "tooltip.portaltransform.item_transform.weather.any": "任意",
+  "tooltip.portaltransform.item_transform.weather.clear": "晴天",
+  "tooltip.portaltransform.item_transform.weather.rain": "雨天",
+  "tooltip.portaltransform.item_transform.weather.thunder": "雷暴雨"
 }
