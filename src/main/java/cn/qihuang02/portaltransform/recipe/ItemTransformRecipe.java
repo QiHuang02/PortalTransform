@@ -37,6 +37,7 @@ public record ItemTransformRecipe(
     private static final int MAX_BYPRODUCT_TYPES = 9;
     private static final String ERROR_EMPTY_RESULT = "Recipe result byproduct cannot be empty";
     private static final String ERROR_TOO_MANY_BYPRODUCTS = "Recipe cannot have more than %d byproduct types, found %d";
+    public static final String ERROR_EMPTY_INPUT = "Recipe input ingredient cannot be empty";
 
     /**
      * 验证配方数据的有效性 (用于 Codec)。
@@ -45,6 +46,10 @@ public record ItemTransformRecipe(
      * @return 如果有效，返回包含配方的 DataResult.success；否则返回 DataResult.error。
      */
     private static DataResult<ItemTransformRecipe> validate(@NotNull ItemTransformRecipe recipe) {
+        if (recipe.inputIngredient.isEmpty()) {
+            return DataResult.error(() -> ERROR_EMPTY_INPUT);
+        }
+
         if (recipe.result.isEmpty()) {
             return DataResult.error(() -> ERROR_EMPTY_RESULT);
         }

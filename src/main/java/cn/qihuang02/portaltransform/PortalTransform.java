@@ -14,13 +14,11 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 @Mod(PortalTransform.MODID)
-public class PortalTransform
-{
+public class PortalTransform {
     public static final String MODID = "portaltransform";
     public static final Logger LOGGER = LogManager.getLogger();
 
-    public PortalTransform(IEventBus modEventBus, ModContainer modContainer)
-    {
+    public PortalTransform(IEventBus modEventBus, ModContainer modContainer) {
         Components.register(modEventBus);
         Recipes.register(modEventBus);
 

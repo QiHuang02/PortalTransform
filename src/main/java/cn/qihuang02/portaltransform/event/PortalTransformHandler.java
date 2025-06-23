@@ -3,10 +3,10 @@ package cn.qihuang02.portaltransform.event;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
-import cn.qihuang02.portaltransform.recipe.SimpleItemInput;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
+import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.Recipes;
+import cn.qihuang02.portaltransform.recipe.SimpleItemInput;
 import cn.qihuang02.portaltransform.util.InventoryUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentType;
@@ -55,36 +55,35 @@ public class PortalTransformHandler {
 
     // --- Item Transformation Logic ---
     private static void handleItemTransformation(EntityTravelToDimensionEvent event, ItemEntity itemEntity, ServerLevel serverLevel) {
-        if (hasNoPortalTransformComponent(itemEntity)) {
-            event.setCanceled(true);
+        if (hasNoPortalTransformComponent(itemEntity) || itemEntity.getItem().isEmpty()) {
+            if (hasNoPortalTransformComponent(itemEntity)) event.setCanceled(true);
             return;
         }
 
-        if (itemEntity.getItem().isEmpty()) {
-            return;
-        }
+        getValidRecipeForContext(itemEntity, serverLevel, event.getDimension())
+                .ifPresent(holder -> processTransformation(event, itemEntity, serverLevel, holder));
+    }
 
-        ResourceKey<Level> currentDimKey = serverLevel.dimension();
-        ResourceKey<Level> targetDimKey = event.getDimension();
-
-        findItemRecipe(itemEntity, serverLevel)
+    private static Optional<RecipeHolder<ItemTransformRecipe>> getValidRecipeForContext(ItemEntity itemEntity, ServerLevel level, ResourceKey<Level> targetDimKey) {
+        return findItemRecipe(itemEntity, level)
                 .filter(holder -> {
                     ItemTransformRecipe recipe = holder.value();
-                    return matchesItemDimensionRequirements(recipe, currentDimKey, targetDimKey) &&
-                            matchesWeather(recipe, serverLevel);
-                })
-                .ifPresent(holder -> {
-                    ItemTransformRecipe recipe = holder.value();
-                    float chance = recipe.transformChance();
-
-                    if (serverLevel.random.nextFloat() < chance) {
-                        event.setCanceled(true);
-                        transformItem(itemEntity, serverLevel, recipe);
-                    } else {
-                        event.setCanceled(true);
-                        itemEntity.discard();
-                    }
+                    return matchesItemDimensionRequirements(recipe, level.dimension(), targetDimKey) &&
+                            matchesWeather(recipe, level);
                 });
+    }
+
+    private static void processTransformation(EntityTravelToDimensionEvent event, ItemEntity itemEntity, ServerLevel level, RecipeHolder<ItemTransformRecipe> holder) {
+        ItemTransformRecipe recipe = holder.value();
+        float chance = recipe.transformChance();
+
+        event.setCanceled(true);
+
+        if (level.random.nextFloat() < chance) {
+            transformItem(itemEntity, level, recipe);
+        } else {
+            itemEntity.discard();
+        }
     }
 
     private static boolean hasNoPortalTransformComponent(@NotNull ItemEntity itemEntity) {
@@ -162,7 +161,7 @@ public class PortalTransformHandler {
                 itemEntity.setItem(remainingOutput);
             }
         } else {
-            LOGGER.warn("Item Recipe {} resulted in an empty output stack!", recipe);
+            LOGGER.debug("Item Recipe {} resulted in an empty output stack!", recipe);
             itemEntity.discard();
             return;
         }

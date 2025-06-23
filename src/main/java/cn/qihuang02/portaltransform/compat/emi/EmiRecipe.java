@@ -2,8 +2,8 @@ package cn.qihuang02.portaltransform.compat.emi;
 
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
+import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
@@ -152,10 +152,6 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     }
 
     private @NotNull Component getWeatherComponent(@NotNull Optional<Weather> weather) {
-        if (weather.isEmpty() || weather.get() == Weather.ANY) {
-
-        }
-
         Weather actualWeather = weather.orElse(Weather.ANY);
         String weatherName = actualWeather.getSerializedName();
         String langKey = "tooltip.portaltransform.item_transform.weather." + weatherName;

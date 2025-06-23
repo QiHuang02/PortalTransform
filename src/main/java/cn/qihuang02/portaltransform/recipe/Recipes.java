@@ -23,6 +23,7 @@ public class Recipes {
                     return PortalTransform.getRL("item_transform").toString();
                 }
             });
+
     public static void register(IEventBus eventBus) {
         RECIPE_SERIALIZERS.register(eventBus);
         RECIPE_TYPES.register(eventBus);
