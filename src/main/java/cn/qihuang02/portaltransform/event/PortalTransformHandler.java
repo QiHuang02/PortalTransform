@@ -3,8 +3,8 @@ package cn.qihuang02.portaltransform.event;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.ItemTransformRecipe;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.SimpleItemInput;
+import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
+import cn.qihuang02.portaltransform.recipe.SimpleItemInput;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import cn.qihuang02.portaltransform.recipe.Recipes;
 import cn.qihuang02.portaltransform.util.InventoryUtil;
@@ -26,19 +26,14 @@ import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @EventBusSubscriber(
         modid = PortalTransform.MODID,
         bus = EventBusSubscriber.Bus.GAME)
 public class PortalTransformHandler {
     private static final Logger LOGGER = PortalTransform.LOGGER;
-
-    private static final Map<ItemStack, Optional<RecipeHolder<ItemTransformRecipe>>> ITEM_RECIPE_CACHE =
-            new ConcurrentHashMap<>();
 
     @SubscribeEvent
     public static void onEntityTravelToDimension(@NotNull EntityTravelToDimensionEvent event) {
@@ -98,15 +93,17 @@ public class PortalTransformHandler {
     }
 
     private static Optional<RecipeHolder<ItemTransformRecipe>> findItemRecipe(@NotNull ItemEntity itemEntity, ServerLevel currentLevel) {
-        ItemStack inputStack = itemEntity.getItem().copyWithCount(1);
-        return ITEM_RECIPE_CACHE.computeIfAbsent(inputStack, stack -> {
-            RecipeManager recipeManager = currentLevel.getRecipeManager();
-            return recipeManager.getRecipeFor(
-                    Recipes.PORTAL_ITEM_TRANSFORM_TYPE.get(),
-                    new SimpleItemInput(stack),
-                    currentLevel
-            );
-        });
+        ItemStack inputStack = itemEntity.getItem();
+        if (inputStack.isEmpty()) {
+            return Optional.empty();
+        }
+
+        RecipeManager recipeManager = currentLevel.getRecipeManager();
+        return recipeManager.getRecipeFor(
+                Recipes.PORTAL_ITEM_TRANSFORM_TYPE.get(),
+                new SimpleItemInput(inputStack),
+                currentLevel
+        );
     }
 
     private static boolean matchesItemDimensionRequirements(@NotNull ItemTransformRecipe recipe, ResourceKey<Level> currentDimKey, ResourceKey<Level> targetDimKey) {
@@ -155,7 +152,7 @@ public class PortalTransformHandler {
 
         ItemStack outputStack = recipe.getResultItem(level.registryAccess()).copy();
         if (!outputStack.isEmpty()) {
-            outputStack.setCount(originalInputCount * outputStack.getCount());
+            outputStack.setCount(originalInputCount);
 
             ItemStack remainingOutput = InventoryUtil.tryPlaceInNearbyInv(level, spawnPos, outputStack);
 
@@ -173,14 +170,7 @@ public class PortalTransformHandler {
         recipe.getByproducts().ifPresent(byproducts -> {
             for (Byproducts definition : byproducts) {
                 for (int i = 0; i < originalInputCount; i++) {
-                    if (random.nextFloat() < definition.chance()) {
-                        ItemStack byproductStack = definition.byproduct().copy();
-                        byproductStack.setCount(definition.counts().getRandomCount(random));
-                        spawnItemByproduct(level, pos, motion, byproductStack, random);
-                    }
-//                    definition.getResult(random).ifPresent(byproductStack ->
-//                            spawnItemByproduct(level, pos, motion, byproductStack, random)
-//                    );
+                    definition.getResult(random).ifPresent(byproductStack -> spawnItemByproduct(level, pos, motion, byproductStack, random));
                 }
             }
         });

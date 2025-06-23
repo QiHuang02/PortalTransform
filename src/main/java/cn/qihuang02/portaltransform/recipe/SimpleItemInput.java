@@ -1,4 +1,4 @@
-package cn.qihuang02.portaltransform.recipe.ItemTransform;
+package cn.qihuang02.portaltransform.recipe;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeInput;

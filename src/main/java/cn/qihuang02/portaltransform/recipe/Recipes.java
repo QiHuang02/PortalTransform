@@ -1,7 +1,6 @@
 package cn.qihuang02.portaltransform.recipe;
 
 import cn.qihuang02.portaltransform.PortalTransform;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.ItemTransformRecipe;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;

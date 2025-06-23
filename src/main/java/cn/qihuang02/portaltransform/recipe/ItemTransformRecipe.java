@@ -1,6 +1,8 @@
-package cn.qihuang02.portaltransform.recipe.ItemTransform;
+package cn.qihuang02.portaltransform.recipe;
 
-import cn.qihuang02.portaltransform.recipe.Recipes;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Dimensions;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;

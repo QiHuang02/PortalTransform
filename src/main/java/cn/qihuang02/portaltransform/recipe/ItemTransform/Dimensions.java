@@ -55,16 +55,10 @@ public record Dimensions(
     }
 
     public Optional<ResourceKey<Level>> current() {
-        if (dimensions.size() == 2) {
-            return Optional.ofNullable(dimensions.getFirst());
-        }
-        return Optional.empty();
+        return dimensions.size() == 2 ? Optional.of(dimensions.getFirst()) : Optional.empty();
     }
 
     public Optional<ResourceKey<Level>> target() {
-        if (dimensions.size() == 2) {
-            return Optional.ofNullable(dimensions.getLast());
-        }
-        return Optional.empty();
+        return dimensions.size() == 2 ? Optional.of(dimensions.getLast()) : Optional.empty();
     }
 }
