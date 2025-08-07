@@ -14,32 +14,34 @@ import org.jetbrains.annotations.NotNull;
 public class InventoryUtil {
     @Contract("_, _, _ -> param3")
     public static @NotNull ItemStack tryPlaceInNearbyInv(ServerLevel level, BlockPos pos, @NotNull ItemStack stack) {
-        if (stack.isEmpty() || !PTConfig.COMMON.autoInsertInttoChests.get()) {
+        if (stack.isEmpty() || !PTConfig.COMMON.autoInsertIntoChests.get()) {
             return stack;
         }
 
         int radius = PTConfig.COMMON.chestSearchRadius.get();
         ItemStack remainingStack = stack.copy();
 
-        BlockPos.MutableBlockPos currentPos = new BlockPos.MutableBlockPos();
+        // Use BlockPos.betweenClosed for more efficient iteration
+        for (BlockPos currentPos : BlockPos.betweenClosed(
+                pos.offset(-radius, -radius, -radius), 
+                pos.offset(radius, radius, radius))) {
+            
+            if (remainingStack.isEmpty()) {
+                return ItemStack.EMPTY;
+            }
 
-        for (int x = pos.getX() - radius; x <= pos.getX() + radius; x++) {
-            for (int y = pos.getY() - radius; y <= pos.getY() + radius; y++) {
-                for (int z = pos.getZ() - radius; z <= pos.getZ() + radius; z++) {
-                    currentPos.set(x, y, z);
-
-                    if (remainingStack.isEmpty()) {
-                        return ItemStack.EMPTY;
-                    }
-
-                    BlockEntity blockEntity = level.getBlockEntity(currentPos);
-                    if (blockEntity != null) {
-                        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, currentPos.immutable(), null);
-                        if (handler != null) {
-                            remainingStack = ItemHandlerHelper.insertItem(handler, remainingStack, false);
-                        }
+            try {
+                BlockEntity blockEntity = level.getBlockEntity(currentPos);
+                if (blockEntity != null) {
+                    IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, currentPos, null);
+                    if (handler != null) {
+                        remainingStack = ItemHandlerHelper.insertItem(handler, remainingStack, false);
                     }
                 }
+            } catch (Exception e) {
+                // Log error and continue with next position
+                // Avoid crashing the entire operation for one bad container
+                continue;
             }
         }
         return remainingStack;

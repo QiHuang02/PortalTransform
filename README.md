@@ -2,8 +2,16 @@
 
 ---
 
-**PortalTransform** 是一个 Minecraft Neoforge 模组，它允许物品在通过传送门时根据特定条件发生转换，并可能产生副产物。
-这个模组旨在为整合包制作者和服务器管理员提供更灵活的物品转换机制。
+**PortalTransform** is a Minecraft NeoForge mod that allows items to transform when passing through portals based on specific conditions and can produce byproducts. This mod aims to provide more flexible item transformation mechanisms for modpack creators and server administrators.
+
+**PortalTransform** 是一个 Minecraft NeoForge 模组，它允许物品在通过传送门时根据特定条件发生转换，并可能产生副产物。这个模组旨在为整合包制作者和服务器管理员提供更灵活的物品转换机制。
+
+## Version Information
+- **Mod Version**: 0.6.7+1.21.1
+- **Author**: QiHuang02
+- **License**: MIT
+- **Minecraft Version**: 1.21.1
+- **NeoForge Version**: 21.1.176
 
 ### 核心特性
 

@@ -1,6 +1,7 @@
 package cn.qihuang02.portaltransform.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
+import org.jetbrains.annotations.NotNull;
 
 public class PTConfig {
     public static final ModConfigSpec COMMON_SPEC;
@@ -13,15 +14,15 @@ public class PTConfig {
     }
 
     public static class CommonConfig {
-        public final ModConfigSpec.BooleanValue autoInsertInttoChests;
+        public final ModConfigSpec.BooleanValue autoInsertIntoChests;
         public final ModConfigSpec.IntValue chestSearchRadius;
 
-        public CommonConfig(ModConfigSpec.Builder builder) {
+        public CommonConfig(ModConfigSpec.@NotNull Builder builder) {
             builder.push("General");
 
-            autoInsertInttoChests = builder
+            autoInsertIntoChests = builder
                     .comment("Whether to automatically insert items into chests")
-                    .define("autoInsertInttoChests", true);
+                    .define("autoInsertIntoChests", true);
 
             chestSearchRadius = builder
                     .comment("The radius of the chest search")

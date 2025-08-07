@@ -22,9 +22,6 @@ public class ItemPickupEvents {
 
         if (stack.has(Components.NO_PORTAL_TRANSFORM.get())) {
             stack.remove(Components.NO_PORTAL_TRANSFORM.get());
-        }
-
-        if (!player.level().isClientSide()) {
             player.containerMenu.broadcastChanges();
         }
     }

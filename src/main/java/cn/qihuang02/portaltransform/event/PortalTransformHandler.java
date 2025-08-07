@@ -149,29 +149,61 @@ public class PortalTransformHandler {
         int originalInputCount = itemEntity.getItem().getCount();
         RandomSource random = level.random;
 
-        ItemStack outputStack = recipe.getResultItem(level.registryAccess()).copy();
-        if (!outputStack.isEmpty()) {
-            outputStack.setCount(originalInputCount);
-
-            ItemStack remainingOutput = InventoryUtil.tryPlaceInNearbyInv(level, spawnPos, outputStack);
-
-            if (remainingOutput.isEmpty()) {
-                itemEntity.discard();
-            } else {
-                itemEntity.setItem(remainingOutput);
-            }
-        } else {
+        ItemStack recipeResult = recipe.getResultItem(level.registryAccess());
+        if (recipeResult.isEmpty()) {
             LOGGER.debug("Item Recipe {} resulted in an empty output stack!", recipe);
             itemEntity.discard();
             return;
         }
 
+        // Only copy and modify count if needed
+        ItemStack outputStack;
+        if (recipeResult.getCount() == originalInputCount) {
+            outputStack = recipeResult.copy();
+        } else {
+            outputStack = recipeResult.copyWithCount(originalInputCount);
+        }
+
+        ItemStack remainingOutput = InventoryUtil.tryPlaceInNearbyInv(level, spawnPos, outputStack);
+
+        if (remainingOutput.isEmpty()) {
+            itemEntity.discard();
+        } else {
+            itemEntity.setItem(remainingOutput);
+        }
+
+        // Process byproducts
+        spawnByproducts(level, pos, motion, recipe, originalInputCount, random);
+    }
+
+    private static void spawnByproducts(ServerLevel level, Vec3 pos, Vec3 motion, ItemTransformRecipe recipe, int originalInputCount, RandomSource random) {
         recipe.getByproducts().ifPresent(byproducts -> {
+            // Group byproducts by type to batch spawn them
+            var byproductCounts = new java.util.HashMap<ItemStack, Integer>();
+            
             for (Byproducts definition : byproducts) {
                 for (int i = 0; i < originalInputCount; i++) {
-                    definition.getResult(random).ifPresent(byproductStack -> spawnItemByproduct(level, pos, motion, byproductStack, random));
+                    definition.getResult(random).ifPresent(byproductStack -> {
+                        // Find existing entry or create new one
+                        ItemStack existingKey = byproductCounts.keySet().stream()
+                                .filter(stack -> ItemStack.isSameItemSameComponents(stack, byproductStack))
+                                .findFirst()
+                                .orElse(null);
+                                
+                        if (existingKey != null) {
+                            byproductCounts.put(existingKey, byproductCounts.get(existingKey) + byproductStack.getCount());
+                        } else {
+                            byproductCounts.put(byproductStack.copy(), byproductStack.getCount());
+                        }
+                    });
                 }
             }
+            
+            // Spawn batched byproducts
+            byproductCounts.forEach((stack, totalCount) -> {
+                ItemStack spawnStack = stack.copyWithCount(totalCount);
+                spawnItemByproduct(level, pos, motion, spawnStack, random);
+            });
         });
     }
 
