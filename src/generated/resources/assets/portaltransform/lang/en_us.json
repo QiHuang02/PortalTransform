@@ -1,0 +1,4 @@
+{
+  "config.portaltransform.autoInsertIntoChests": "Automatically insert items into nearby chests",
+  "config.portaltransform.chestSearchRadius": "Chest search radius"
+}
