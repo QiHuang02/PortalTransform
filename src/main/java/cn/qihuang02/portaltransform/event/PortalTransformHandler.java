@@ -3,6 +3,7 @@ package cn.qihuang02.portaltransform.event;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.Recipes;
+import cn.qihuang02.portaltransform.util.InventoryUtil;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
@@ -35,7 +36,12 @@ public class PortalTransformHandler {
         recipeOpt.ifPresent(recipe -> {
             event.setCanceled(true);
             ItemStack output = recipe.getResultItem(level.registryAccess()).copyWithCount(stack.getCount());
-            itemEntity.setItem(output);
+            ItemStack remaining = InventoryUtil.tryPlaceInNearbyInv(level, itemEntity.blockPosition(), output);
+            if (remaining.isEmpty()) {
+                itemEntity.discard();
+            } else {
+                itemEntity.setItem(remaining);
+            }
         });
     }
 }
