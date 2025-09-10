@@ -27,4 +27,17 @@ public final class NbtUtil {
     public static void setNoPortalTransform(@NotNull ItemStack stack) {
         stack.getOrCreateTagElement(PortalTransform.MODID).putBoolean(TAG_NO_TRANSFORM, true);
     }
+
+    /**
+     * Clears the no-transform flag from the given stack so it may be processed again.
+     */
+    public static void clearNoPortalTransform(@NotNull ItemStack stack) {
+        CompoundTag tag = stack.getTagElement(PortalTransform.MODID);
+        if (tag != null) {
+            tag.remove(TAG_NO_TRANSFORM);
+            if (tag.isEmpty()) {
+                stack.removeTagKey(PortalTransform.MODID);
+            }
+        }
+    }
 }
