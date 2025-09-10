@@ -4,6 +4,7 @@ import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.Recipes;
 import cn.qihuang02.portaltransform.util.InventoryUtil;
+import cn.qihuang02.portaltransform.util.NbtUtil;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
@@ -30,12 +31,18 @@ public class PortalTransformHandler {
 
     private static void handleItem(EntityTravelToDimensionEvent event, ItemEntity itemEntity, ServerLevel level) {
         ItemStack stack = itemEntity.getItem();
-        if (stack.isEmpty()) return;
+        if (stack.isEmpty() || NbtUtil.hasNoPortalTransform(stack)) {
+            if (NbtUtil.hasNoPortalTransform(stack)) {
+                event.setCanceled(true);
+            }
+            return;
+        }
         Optional<ItemTransformRecipe> recipeOpt = level.getRecipeManager()
                 .getRecipeFor(Recipes.PORTAL_ITEM_TRANSFORM_TYPE.get(), new SimpleContainer(stack), level);
         recipeOpt.ifPresent(recipe -> {
             event.setCanceled(true);
             ItemStack output = recipe.getResultItem(level.registryAccess()).copyWithCount(stack.getCount());
+            NbtUtil.setNoPortalTransform(output);
             ItemStack remaining = InventoryUtil.tryPlaceInNearbyInv(level, itemEntity.blockPosition(), output);
             if (remaining.isEmpty()) {
                 itemEntity.discard();
