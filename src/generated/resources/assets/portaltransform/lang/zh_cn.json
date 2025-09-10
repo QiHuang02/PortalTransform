@@ -1,0 +1,4 @@
+{
+  "config.portaltransform.autoInsertIntoChests": "自动插入附近箱子",
+  "config.portaltransform.chestSearchRadius": "箱子搜索半径"
+}
