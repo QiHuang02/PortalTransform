@@ -1,6 +1,7 @@
 package cn.qihuang02.portaltransform;
 
 import cn.qihuang02.portaltransform.config.PTConfig;
+import cn.qihuang02.portaltransform.recipe.Recipes;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -20,7 +21,7 @@ public class PortalTransform {
 
     public PortalTransform() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        // Recipes.register(modEventBus); // TODO: implement recipe registration
+        Recipes.register(modEventBus);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, PTConfig.COMMON_SPEC);
     }
