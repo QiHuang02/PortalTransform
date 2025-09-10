@@ -1,0 +1,6 @@
+{
+  "id": "portaltransform",
+  "plugins": [
+    "cn.qihuang02.portaltransform.kubejs.PortalTransformKubeJSPlugin"
+  ]
+}
