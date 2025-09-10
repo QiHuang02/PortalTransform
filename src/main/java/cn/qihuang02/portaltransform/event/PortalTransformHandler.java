@@ -40,6 +40,9 @@ public class PortalTransformHandler {
         Optional<ItemTransformRecipe> recipeOpt = level.getRecipeManager()
                 .getRecipeFor(Recipes.PORTAL_ITEM_TRANSFORM_TYPE.get(), new SimpleContainer(stack), level);
         recipeOpt.ifPresent(recipe -> {
+            if (level.random.nextFloat() > recipe.getTransformChance()) {
+                return;
+            }
             event.setCanceled(true);
             ItemStack output = recipe.getResultItem(level.registryAccess()).copyWithCount(stack.getCount());
             NbtUtil.setNoPortalTransform(output);
@@ -49,6 +52,14 @@ public class PortalTransformHandler {
             } else {
                 itemEntity.setItem(remaining);
             }
+            recipe.getByproducts().forEach(bp -> bp.getResult(level.random).ifPresent(byStack -> {
+                NbtUtil.setNoPortalTransform(byStack);
+                ItemStack leftover = InventoryUtil.tryPlaceInNearbyInv(level, itemEntity.blockPosition(), byStack);
+                if (!leftover.isEmpty()) {
+                    ItemEntity extra = new ItemEntity(level, itemEntity.getX(), itemEntity.getY(), itemEntity.getZ(), leftover);
+                    level.addFreshEntity(extra);
+                }
+            }));
         });
     }
 }
