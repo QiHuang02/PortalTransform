@@ -2,11 +2,15 @@ package cn.qihuang02.portaltransform.recipe;
 
 import cn.qihuang02.portaltransform.recipe.itemtransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.itemtransform.CountRange;
+import cn.qihuang02.portaltransform.recipe.itemtransform.Dimensions;
+import cn.qihuang02.portaltransform.recipe.itemtransform.Weather;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
@@ -29,13 +33,19 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
     private final ItemStack result;
     private final List<Byproducts> byproducts;
     private final float transformChance;
+    private final Dimensions dimensions;
+    private final Weather weather;
 
-    public ItemTransformRecipe(ResourceLocation id, Ingredient input, ItemStack result, List<Byproducts> byproducts, float transformChance) {
+    public ItemTransformRecipe(ResourceLocation id, Ingredient input, ItemStack result,
+                               List<Byproducts> byproducts, float transformChance,
+                               Dimensions dimensions, Weather weather) {
         this.id = id;
         this.input = input;
         this.result = result;
         this.byproducts = byproducts;
         this.transformChance = transformChance;
+        this.dimensions = dimensions;
+        this.weather = weather;
     }
 
     @Override
@@ -69,6 +79,18 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
 
     public float getTransformChance() {
         return transformChance;
+    }
+
+    public java.util.Optional<ResourceKey<Level>> getCurrent() {
+        return dimensions == null ? java.util.Optional.empty() : dimensions.current();
+    }
+
+    public java.util.Optional<ResourceKey<Level>> getTarget() {
+        return dimensions == null ? java.util.Optional.empty() : dimensions.target();
+    }
+
+    public java.util.Optional<Weather> getWeather() {
+        return java.util.Optional.ofNullable(weather);
     }
 
     @Override
@@ -106,7 +128,29 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
                 }
             }
             float transformChance = GsonHelper.getAsFloat(json, "transform_chance", 1.0F);
-            return new ItemTransformRecipe(id, input, output, byproducts, transformChance);
+
+            Dimensions dims = null;
+            if (GsonHelper.isObjectNode(json, "dimensions")) {
+                JsonObject dimObj = GsonHelper.getAsJsonObject(json, "dimensions");
+                ResourceKey<Level> current = null;
+                ResourceKey<Level> target = null;
+                if (GsonHelper.isStringValue(dimObj, "current")) {
+                    ResourceLocation loc = new ResourceLocation(GsonHelper.getAsString(dimObj, "current"));
+                    current = ResourceKey.create(Registries.DIMENSION, loc);
+                }
+                if (GsonHelper.isStringValue(dimObj, "target")) {
+                    ResourceLocation loc = new ResourceLocation(GsonHelper.getAsString(dimObj, "target"));
+                    target = ResourceKey.create(Registries.DIMENSION, loc);
+                }
+                dims = new Dimensions(current, target);
+            }
+
+            Weather weather = null;
+            if (GsonHelper.isStringValue(json, "weather")) {
+                weather = Weather.fromName(GsonHelper.getAsString(json, "weather"));
+            }
+
+            return new ItemTransformRecipe(id, input, output, byproducts, transformChance, dims, weather);
         }
 
         @Override
@@ -123,7 +167,26 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
                 byproducts.add(new Byproducts(stack, chance, new CountRange(min, max)));
             }
             float transformChance = buf.readFloat();
-            return new ItemTransformRecipe(id, input, output, byproducts, transformChance);
+
+            Dimensions dims = null;
+            if (buf.readBoolean()) {
+                ResourceKey<Level> current = null;
+                ResourceKey<Level> target = null;
+                if (buf.readBoolean()) {
+                    current = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
+                }
+                if (buf.readBoolean()) {
+                    target = ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation());
+                }
+                dims = new Dimensions(current, target);
+            }
+
+            Weather weather = null;
+            if (buf.readBoolean()) {
+                weather = buf.readEnum(Weather.class);
+            }
+
+            return new ItemTransformRecipe(id, input, output, byproducts, transformChance, dims, weather);
         }
 
         @Override
@@ -138,6 +201,23 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
                 buf.writeVarInt(bp.getCounts().getMax());
             }
             buf.writeFloat(recipe.transformChance);
+
+            if (recipe.dimensions != null) {
+                buf.writeBoolean(true);
+                buf.writeBoolean(recipe.dimensions.current().isPresent());
+                recipe.dimensions.current().ifPresent(dim -> buf.writeResourceLocation(dim.location()));
+                buf.writeBoolean(recipe.dimensions.target().isPresent());
+                recipe.dimensions.target().ifPresent(dim -> buf.writeResourceLocation(dim.location()));
+            } else {
+                buf.writeBoolean(false);
+            }
+
+            if (recipe.weather != null) {
+                buf.writeBoolean(true);
+                buf.writeEnum(recipe.weather);
+            } else {
+                buf.writeBoolean(false);
+            }
         }
     }
 }
