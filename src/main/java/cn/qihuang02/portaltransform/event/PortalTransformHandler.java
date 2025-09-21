@@ -2,8 +2,8 @@ package cn.qihuang02.portaltransform.event;
 
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.Recipes;
@@ -218,7 +218,7 @@ public class PortalTransformHandler {
         recipe.getByproducts().ifPresent(byproducts -> {
             // Group byproducts by type to batch spawn them
             var byproductCounts = new java.util.HashMap<ItemStack, Integer>();
-            
+
             for (Byproducts definition : byproducts) {
                 for (int i = 0; i < originalInputCount; i++) {
                     definition.getResult(random).ifPresent(byproductStack -> {
@@ -227,7 +227,7 @@ public class PortalTransformHandler {
                                 .filter(stack -> ItemStack.isSameItemSameComponents(stack, byproductStack))
                                 .findFirst()
                                 .orElse(null);
-                                
+
                         if (existingKey != null) {
                             byproductCounts.put(existingKey, byproductCounts.get(existingKey) + byproductStack.getCount());
                         } else {
@@ -236,7 +236,7 @@ public class PortalTransformHandler {
                     });
                 }
             }
-            
+
             // Spawn batched byproducts
             byproductCounts.forEach((stack, totalCount) -> {
                 ItemStack spawnStack = stack.copyWithCount(totalCount);

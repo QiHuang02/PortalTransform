@@ -25,6 +25,16 @@ public record Height(Optional<Integer> minY, Optional<Integer> maxY) {
                     decodeOptionalInt(buf)
             )
     );
+    private static final MapCodec<Height> BASE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            Codec.INT.optionalFieldOf("min").forGetter(Height::minY),
+            Codec.INT.optionalFieldOf("max").forGetter(Height::maxY)
+    ).apply(instance, Height::new));
+    public static final Codec<Height> CODEC = BASE_CODEC.codec().flatXmap(Height::validate, Height::validate);
+
+    public Height(@NotNull Optional<Integer> minY, @NotNull Optional<Integer> maxY) {
+        this.minY = Objects.requireNonNull(minY, "minY optional cannot be null");
+        this.maxY = Objects.requireNonNull(maxY, "maxY optional cannot be null");
+    }
 
     private static void encodeOptionalInt(RegistryFriendlyByteBuf buf, Optional<Integer> value) {
         buf.writeBoolean(value.isPresent());
@@ -33,18 +43,6 @@ public record Height(Optional<Integer> minY, Optional<Integer> maxY) {
 
     private static Optional<Integer> decodeOptionalInt(RegistryFriendlyByteBuf buf) {
         return buf.readBoolean() ? Optional.of(buf.readVarInt()) : Optional.empty();
-    }
-
-    private static final MapCodec<Height> BASE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Codec.INT.optionalFieldOf("min").forGetter(Height::minY),
-            Codec.INT.optionalFieldOf("max").forGetter(Height::maxY)
-    ).apply(instance, Height::new));
-
-    public static final Codec<Height> CODEC = BASE_CODEC.codec().flatXmap(Height::validate, Height::validate);
-
-    public Height(@NotNull Optional<Integer> minY, @NotNull Optional<Integer> maxY) {
-        this.minY = Objects.requireNonNull(minY, "minY optional cannot be null");
-        this.maxY = Objects.requireNonNull(maxY, "maxY optional cannot be null");
     }
 
     private static DataResult<Height> validate(@NotNull Height height) {

@@ -1,11 +1,6 @@
 package cn.qihuang02.portaltransform.recipe;
 
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Dimensions;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.*;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
@@ -42,10 +37,10 @@ public record ItemTransformRecipe(
         Optional<ItemPredicate> itemPredicate,
         float transformChance
 ) implements Recipe<SimpleItemInput> {
+    public static final String ERROR_EMPTY_INPUT = "Recipe input ingredient cannot be empty";
     private static final int MAX_BYPRODUCT_TYPES = 9;
     private static final String ERROR_EMPTY_RESULT = "Recipe result byproduct cannot be empty";
     private static final String ERROR_TOO_MANY_BYPRODUCTS = "Recipe cannot have more than %d byproduct types, found %d";
-    public static final String ERROR_EMPTY_INPUT = "Recipe input ingredient cannot be empty";
 
     /**
      * 验证配方数据的有效性 (用于 Codec)。
@@ -149,6 +144,24 @@ public record ItemTransformRecipe(
 
         public static final StreamCodec<RegistryFriendlyByteBuf, ItemTransformRecipe> STREAM_CODEC =
                 StreamCodec.of(Serializer::encode, Serializer::decode);
+        private static final MapCodec<ItemTransformRecipe> BASE_CODEC = RecordCodecBuilder.mapCodec(
+                instance -> instance.group(
+                        Ingredient.CODEC_NONEMPTY.fieldOf("input").forGetter(ItemTransformRecipe::inputIngredient),
+                        ItemStack.STRICT_CODEC.fieldOf("result").forGetter(ItemTransformRecipe::result),
+                        Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(ItemTransformRecipe::byproducts),
+                        Dimensions.CODEC.optionalFieldOf("dimensions").forGetter(ItemTransformRecipe::dimensions),
+                        Weather.CODEC.optionalFieldOf("weather").forGetter(ItemTransformRecipe::weather),
+                        Biomes.CODEC.optionalFieldOf("biomes").forGetter(ItemTransformRecipe::biomes),
+                        Height.CODEC.optionalFieldOf("height").forGetter(ItemTransformRecipe::height),
+                        TimeCondition.CODEC.optionalFieldOf("time").forGetter(ItemTransformRecipe::time),
+                        ItemPredicate.CODEC.optionalFieldOf("item_predicate").forGetter(ItemTransformRecipe::itemPredicate),
+                        Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0F).forGetter(ItemTransformRecipe::transformChance)
+                ).apply(instance, ItemTransformRecipe::new)
+        );
+        public static final MapCodec<ItemTransformRecipe> CODEC = BASE_CODEC
+                .flatXmap(ItemTransformRecipe::validate,
+                        ItemTransformRecipe::validate
+                );
 
         private static void encode(RegistryFriendlyByteBuf buf, ItemTransformRecipe recipe) {
             Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.inputIngredient());
@@ -224,26 +237,6 @@ public record ItemTransformRecipe(
             }
             return Optional.of(Weather.STREAM_CODEC.decode(buf));
         }
-
-        private static final MapCodec<ItemTransformRecipe> BASE_CODEC = RecordCodecBuilder.mapCodec(
-                instance -> instance.group(
-                        Ingredient.CODEC_NONEMPTY.fieldOf("input").forGetter(ItemTransformRecipe::inputIngredient),
-                        ItemStack.STRICT_CODEC.fieldOf("result").forGetter(ItemTransformRecipe::result),
-                        Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(ItemTransformRecipe::byproducts),
-                        Dimensions.CODEC.optionalFieldOf("dimensions").forGetter(ItemTransformRecipe::dimensions),
-                        Weather.CODEC.optionalFieldOf("weather").forGetter(ItemTransformRecipe::weather),
-                        Biomes.CODEC.optionalFieldOf("biomes").forGetter(ItemTransformRecipe::biomes),
-                        Height.CODEC.optionalFieldOf("height").forGetter(ItemTransformRecipe::height),
-                        TimeCondition.CODEC.optionalFieldOf("time").forGetter(ItemTransformRecipe::time),
-                        ItemPredicate.CODEC.optionalFieldOf("item_predicate").forGetter(ItemTransformRecipe::itemPredicate),
-                        Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0F).forGetter(ItemTransformRecipe::transformChance)
-                ).apply(instance, ItemTransformRecipe::new)
-        );
-
-        public static final MapCodec<ItemTransformRecipe> CODEC = BASE_CODEC
-                .flatXmap(ItemTransformRecipe::validate,
-                        ItemTransformRecipe::validate
-                );
 
         public @NotNull MapCodec<ItemTransformRecipe> codec() {
             return CODEC;

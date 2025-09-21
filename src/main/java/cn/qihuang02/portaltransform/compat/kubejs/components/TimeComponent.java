@@ -89,7 +89,8 @@ public class TimeComponent implements RecipeComponent<TimeCondition> {
             case ANY -> TimeCondition.any();
             case DAY -> TimeCondition.day();
             case NIGHT -> TimeCondition.night();
-            case RANGE -> throw ScriptRuntime.typeError(cx, "String 'range' requires an object with 'start' and 'end' values.");
+            case RANGE ->
+                    throw ScriptRuntime.typeError(cx, "String 'range' requires an object with 'start' and 'end' values.");
         };
     }
 
@@ -108,7 +109,8 @@ public class TimeComponent implements RecipeComponent<TimeCondition> {
             case "day" -> Mode.DAY;
             case "night" -> Mode.NIGHT;
             case "range" -> Mode.RANGE;
-            default -> throw ScriptRuntime.typeError(cx, "Unknown time mode '" + value + "'. Expected any, day, night, or range.");
+            default ->
+                    throw ScriptRuntime.typeError(cx, "Unknown time mode '" + value + "'. Expected any, day, night, or range.");
         };
     }
 

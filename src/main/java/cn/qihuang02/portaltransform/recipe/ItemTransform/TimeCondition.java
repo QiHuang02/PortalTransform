@@ -6,9 +6,9 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -37,6 +37,18 @@ public record TimeCondition(Mode mode, Optional<Integer> start, Optional<Integer
                 return new TimeCondition(mode, start, end);
             }
     );
+    private static final MapCodec<TimeCondition> BASE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            Mode.CODEC.optionalFieldOf("mode", Mode.ANY).forGetter(TimeCondition::mode),
+            Codec.INT.optionalFieldOf("start").forGetter(TimeCondition::start),
+            Codec.INT.optionalFieldOf("end").forGetter(TimeCondition::end)
+    ).apply(instance, TimeCondition::new));
+    public static final Codec<TimeCondition> CODEC = BASE_CODEC.codec().flatXmap(TimeCondition::validate, TimeCondition::validate);
+
+    public TimeCondition(@NotNull Mode mode, @NotNull Optional<Integer> start, @NotNull Optional<Integer> end) {
+        this.mode = Objects.requireNonNull(mode, "mode");
+        this.start = Objects.requireNonNull(start, "start optional cannot be null");
+        this.end = Objects.requireNonNull(end, "end optional cannot be null");
+    }
 
     private static void encodeOptionalInt(RegistryFriendlyByteBuf buf, Optional<Integer> value) {
         buf.writeBoolean(value.isPresent());
@@ -45,20 +57,6 @@ public record TimeCondition(Mode mode, Optional<Integer> start, Optional<Integer
 
     private static Optional<Integer> decodeOptionalInt(RegistryFriendlyByteBuf buf) {
         return buf.readBoolean() ? Optional.of(buf.readVarInt()) : Optional.empty();
-    }
-
-    private static final MapCodec<TimeCondition> BASE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Mode.CODEC.optionalFieldOf("mode", Mode.ANY).forGetter(TimeCondition::mode),
-            Codec.INT.optionalFieldOf("start").forGetter(TimeCondition::start),
-            Codec.INT.optionalFieldOf("end").forGetter(TimeCondition::end)
-    ).apply(instance, TimeCondition::new));
-
-    public static final Codec<TimeCondition> CODEC = BASE_CODEC.codec().flatXmap(TimeCondition::validate, TimeCondition::validate);
-
-    public TimeCondition(@NotNull Mode mode, @NotNull Optional<Integer> start, @NotNull Optional<Integer> end) {
-        this.mode = Objects.requireNonNull(mode, "mode");
-        this.start = Objects.requireNonNull(start, "start optional cannot be null");
-        this.end = Objects.requireNonNull(end, "end optional cannot be null");
     }
 
     public static TimeCondition any() {

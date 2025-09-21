@@ -23,9 +23,9 @@ public class InventoryUtil {
 
         // Use BlockPos.betweenClosed for more efficient iteration
         for (BlockPos currentPos : BlockPos.betweenClosed(
-                pos.offset(-radius, -radius, -radius), 
+                pos.offset(-radius, -radius, -radius),
                 pos.offset(radius, radius, radius))) {
-            
+
             if (remainingStack.isEmpty()) {
                 return ItemStack.EMPTY;
             }
@@ -41,7 +41,6 @@ public class InventoryUtil {
             } catch (Exception e) {
                 // Log error and continue with next position
                 // Avoid crashing the entire operation for one bad container
-                continue;
             }
         }
         return remainingStack;

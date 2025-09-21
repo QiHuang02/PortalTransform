@@ -1,14 +1,9 @@
 package cn.qihuang02.portaltransform.compat.emi;
 
 import cn.qihuang02.portaltransform.PortalTransform;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.*;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import com.mojang.serialization.JsonOps;
-
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
@@ -21,10 +16,10 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
@@ -121,7 +116,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
             if (shouldDrow) {
                 Component weatherLine = getWeatherComponent(recipe.getWeather());
                 widgets.addTexture(TEXTURE_GUI, 63, 25, 16, 16, u, 0, 16, 16, 256, 256)
-                        .tooltipText(weatherLine != null ? List.of(weatherLine) : Collections.emptyList());
+                        .tooltipText(List.of(weatherLine));
             }
         });
 
@@ -225,8 +220,8 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
             case NIGHT -> Component.translatable("tooltip.portaltransform.item_transform.time.night")
                     .withStyle(ChatFormatting.BLUE);
             case RANGE -> Component.translatable("tooltip.portaltransform.item_transform.time.range",
-                    formatTick(condition.start().orElse(0)),
-                    formatTick(condition.end().orElse(0)))
+                            formatTick(condition.start().orElse(0)),
+                            formatTick(condition.end().orElse(0)))
                     .withStyle(ChatFormatting.AQUA);
         };
     }

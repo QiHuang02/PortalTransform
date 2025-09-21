@@ -1,14 +1,7 @@
 package cn.qihuang02.portaltransform.compat.kubejs;
 
 import cn.qihuang02.portaltransform.compat.kubejs.binding.ByproductsBinding;
-import cn.qihuang02.portaltransform.compat.kubejs.components.BiomesComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.DimensionsComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.HeightComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.ItemPredicateComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.LevelComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.TimeComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.WeatherComponent;
+import cn.qihuang02.portaltransform.compat.kubejs.components.*;
 import cn.qihuang02.portaltransform.compat.kubejs.recipe.ItemTransformKubeRecipe;
 import cn.qihuang02.portaltransform.compat.kubejs.schema.PortalItemTransformRecipeSchema;
 import cn.qihuang02.portaltransform.recipe.Recipes;

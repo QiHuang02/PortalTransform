@@ -1,19 +1,8 @@
 package cn.qihuang02.portaltransform.compat.kubejs.schema;
 
-import cn.qihuang02.portaltransform.compat.kubejs.components.BiomesComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.DimensionsComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.HeightComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.ItemPredicateComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.TimeComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.WeatherComponent;
+import cn.qihuang02.portaltransform.compat.kubejs.components.*;
 import cn.qihuang02.portaltransform.compat.kubejs.recipe.ItemTransformKubeRecipe;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Dimensions;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.*;
 import dev.latvian.mods.kubejs.recipe.RecipeKey;
 import dev.latvian.mods.kubejs.recipe.component.IngredientComponent;
 import dev.latvian.mods.kubejs.recipe.component.ItemStackComponent;
