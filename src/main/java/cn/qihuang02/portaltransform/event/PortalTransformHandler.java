@@ -73,7 +73,10 @@ public class PortalTransformHandler {
                     ItemTransformRecipe recipe = holder.value();
                     return matchesItemDimensionRequirements(recipe, level.dimension(), targetDimKey) &&
                             matchesWeather(recipe, level) &&
-                            matchesBiome(recipe, level, itemEntity.blockPosition());
+                            matchesBiome(recipe, level, itemEntity.blockPosition()) &&
+                            matchesHeight(recipe, itemEntity.blockPosition().getY()) &&
+                            matchesTime(recipe, level) &&
+                            matchesItemData(recipe, itemEntity.getItem());
                 });
     }
 
@@ -153,6 +156,24 @@ public class PortalTransformHandler {
         return biomeHolder.unwrapKey()
                 .map(requiredBiomes.get()::contains)
                 .orElse(false);
+    }
+
+    private static boolean matchesHeight(@NotNull ItemTransformRecipe recipe, int yLevel) {
+        return recipe.getHeightRequirement()
+                .map(requirement -> requirement.matches(yLevel))
+                .orElse(true);
+    }
+
+    private static boolean matchesTime(@NotNull ItemTransformRecipe recipe, @NotNull ServerLevel level) {
+        return recipe.getTimeRequirement()
+                .map(condition -> condition.matches(level))
+                .orElse(true);
+    }
+
+    private static boolean matchesItemData(@NotNull ItemTransformRecipe recipe, @NotNull ItemStack stack) {
+        return recipe.getItemDataPredicate()
+                .map(predicate -> predicate.test(stack))
+                .orElse(true);
     }
 
     private static void transformItem(ItemEntity itemEntity, ServerLevel level, ItemTransformRecipe recipe) {

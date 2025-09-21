@@ -4,7 +4,10 @@ import cn.qihuang02.portaltransform.compat.kubejs.binding.ByproductsBinding;
 import cn.qihuang02.portaltransform.compat.kubejs.components.BiomesComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.DimensionsComponent;
+import cn.qihuang02.portaltransform.compat.kubejs.components.HeightComponent;
+import cn.qihuang02.portaltransform.compat.kubejs.components.ItemPredicateComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.LevelComponent;
+import cn.qihuang02.portaltransform.compat.kubejs.components.TimeComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.WeatherComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.recipe.ItemTransformKubeRecipe;
 import cn.qihuang02.portaltransform.compat.kubejs.schema.PortalItemTransformRecipeSchema;
@@ -31,6 +34,9 @@ public class KubeJSPlugin implements dev.latvian.mods.kubejs.plugin.KubeJSPlugin
         registry.register(DimensionsComponent.DIMENSIONS);
         registry.register(BiomesComponent.BIOMES);
         registry.register(WeatherComponent.WEATHER);
+        registry.register(HeightComponent.HEIGHT);
+        registry.register(TimeComponent.TIME);
+        registry.register(ItemPredicateComponent.ITEM_PREDICATE);
     }
 
     @Override

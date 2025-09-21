@@ -3,19 +3,25 @@ package cn.qihuang02.portaltransform.compat.emi;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
+import com.mojang.serialization.JsonOps;
+
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.WidgetHolder;
 import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.util.GsonHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -176,6 +182,78 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         return Component.literal(loc.toString()).withStyle(ChatFormatting.YELLOW);
     }
 
+    private @NotNull @Unmodifiable List<Component> getHeightTooltipLines() {
+        return recipe.getHeightRequirement()
+                .map(requirement -> List.of(createRequirementLine(getHeightComponent(requirement))))
+                .orElse(List.of(createRequirementLine(getNoRequirementComponent())));
+    }
+
+    private @NotNull Component getHeightComponent(@NotNull Height requirement) {
+        Optional<Integer> min = requirement.minY();
+        Optional<Integer> max = requirement.maxY();
+
+        if (min.isPresent() && max.isPresent()) {
+            if (min.get().equals(max.get())) {
+                return Component.translatable("tooltip.portaltransform.item_transform.height.equal", min.get())
+                        .withStyle(ChatFormatting.AQUA);
+            }
+            return Component.translatable("tooltip.portaltransform.item_transform.height.range", min.get(), max.get())
+                    .withStyle(ChatFormatting.AQUA);
+        }
+
+        if (min.isPresent()) {
+            return Component.translatable("tooltip.portaltransform.item_transform.height.min", min.get())
+                    .withStyle(ChatFormatting.AQUA);
+        }
+
+        return Component.translatable("tooltip.portaltransform.item_transform.height.max", max.orElse(0))
+                .withStyle(ChatFormatting.AQUA);
+    }
+
+    private @NotNull @Unmodifiable List<Component> getTimeTooltipLines() {
+        return recipe.getTimeRequirement()
+                .map(condition -> List.of(createRequirementLine(getTimeComponent(condition))))
+                .orElse(List.of(createRequirementLine(getNoRequirementComponent())));
+    }
+
+    private @NotNull Component getTimeComponent(@NotNull TimeCondition condition) {
+        return switch (condition.mode()) {
+            case ANY -> Component.translatable("tooltip.portaltransform.item_transform.time.any")
+                    .withStyle(ChatFormatting.GREEN);
+            case DAY -> Component.translatable("tooltip.portaltransform.item_transform.time.day")
+                    .withStyle(ChatFormatting.GOLD);
+            case NIGHT -> Component.translatable("tooltip.portaltransform.item_transform.time.night")
+                    .withStyle(ChatFormatting.BLUE);
+            case RANGE -> Component.translatable("tooltip.portaltransform.item_transform.time.range",
+                    formatTick(condition.start().orElse(0)),
+                    formatTick(condition.end().orElse(0)))
+                    .withStyle(ChatFormatting.AQUA);
+        };
+    }
+
+    private String formatTick(int tick) {
+        return Integer.toString(tick);
+    }
+
+    private @NotNull @Unmodifiable List<Component> getItemPredicateTooltipLines() {
+        return recipe.getItemDataPredicate()
+                .map(predicate -> List.of(createRequirementLine(getItemPredicateComponent(predicate))))
+                .orElse(List.of(createRequirementLine(getNoRequirementComponent())));
+    }
+
+    private @NotNull Component getItemPredicateComponent(@NotNull ItemPredicate predicate) {
+        String display = getItemPredicateDisplay(predicate);
+        return Component.translatable("tooltip.portaltransform.item_transform.item_predicate.value", display)
+                .withStyle(ChatFormatting.AQUA);
+    }
+
+    private @NotNull String getItemPredicateDisplay(@NotNull ItemPredicate predicate) {
+        return ItemPredicate.CODEC.encodeStart(JsonOps.INSTANCE, predicate)
+                .map(GsonHelper::toStableString)
+                .result()
+                .orElseGet(predicate::toString);
+    }
+
     private @NotNull Component getNoRequirementComponent() {
         return Component.translatable("tooltip.portaltransform.item_transform.no_requirement")
                 .withStyle(ChatFormatting.GREEN);
@@ -192,6 +270,12 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         lines.addAll(getDimensionTooltipLines());
         lines.add(Component.translatable("tooltip.portaltransform.item_transform.biomes").withStyle(ChatFormatting.DARK_GREEN));
         lines.addAll(getBiomeTooltipLines());
+        lines.add(Component.translatable("tooltip.portaltransform.item_transform.height").withStyle(ChatFormatting.GRAY));
+        lines.addAll(getHeightTooltipLines());
+        lines.add(Component.translatable("tooltip.portaltransform.item_transform.time").withStyle(ChatFormatting.AQUA));
+        lines.addAll(getTimeTooltipLines());
+        lines.add(Component.translatable("tooltip.portaltransform.item_transform.item_predicate").withStyle(ChatFormatting.DARK_PURPLE));
+        lines.addAll(getItemPredicateTooltipLines());
         return List.copyOf(lines);
     }
 

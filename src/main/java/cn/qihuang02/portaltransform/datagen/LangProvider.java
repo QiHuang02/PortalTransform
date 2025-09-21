@@ -18,6 +18,19 @@ public class LangProvider extends LanguageProvider {
         this.add("tooltip.portaltransform.item_transform.dimensions", "Dimensions");
         this.add("tooltip.portaltransform.item_transform.biomes", "Biomes");
 
+        this.add("tooltip.portaltransform.item_transform.height", "Height");
+        this.add("tooltip.portaltransform.item_transform.height.equal", "Y = %s");
+        this.add("tooltip.portaltransform.item_transform.height.min", "Y ≥ %s");
+        this.add("tooltip.portaltransform.item_transform.height.max", "Y ≤ %s");
+        this.add("tooltip.portaltransform.item_transform.height.range", "%s ≤ Y ≤ %s");
+        this.add("tooltip.portaltransform.item_transform.time", "Time");
+        this.add("tooltip.portaltransform.item_transform.time.any", "Any time");
+        this.add("tooltip.portaltransform.item_transform.time.day", "Daytime");
+        this.add("tooltip.portaltransform.item_transform.time.night", "Nighttime");
+        this.add("tooltip.portaltransform.item_transform.time.range", "Between %s and %s ticks");
+        this.add("tooltip.portaltransform.item_transform.item_predicate", "Item Data");
+        this.add("tooltip.portaltransform.item_transform.item_predicate.value", "Predicate: %s");
+
         this.add("tooltip.portaltransform.item_transform.byproduct", "Byproduct");
         this.add("tooltip.portaltransform.item_transform.byproduct.chance", "Chance: %s");
         this.add("tooltip.portaltransform.item_transform.byproduct.min_count", "Min Count: %s");
