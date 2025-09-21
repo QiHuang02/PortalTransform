@@ -3,12 +3,14 @@ package cn.qihuang02.portaltransform.event;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.Recipes;
 import cn.qihuang02.portaltransform.recipe.SimpleItemInput;
 import cn.qihuang02.portaltransform.util.InventoryUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -19,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -69,7 +72,8 @@ public class PortalTransformHandler {
                 .filter(holder -> {
                     ItemTransformRecipe recipe = holder.value();
                     return matchesItemDimensionRequirements(recipe, level.dimension(), targetDimKey) &&
-                            matchesWeather(recipe, level);
+                            matchesWeather(recipe, level) &&
+                            matchesBiome(recipe, level, itemEntity.blockPosition());
                 });
     }
 
@@ -136,6 +140,19 @@ public class PortalTransformHandler {
             case THUNDER -> isThundering;
             default -> true;
         };
+    }
+
+    private static boolean matchesBiome(@NotNull ItemTransformRecipe recipe, @NotNull ServerLevel level, @NotNull BlockPos pos) {
+        Optional<Biomes> requiredBiomes = recipe.getBiomes();
+
+        if (requiredBiomes.isEmpty()) {
+            return true;
+        }
+
+        Holder<Biome> biomeHolder = level.getBiome(pos);
+        return biomeHolder.unwrapKey()
+                .map(requiredBiomes.get()::contains)
+                .orElse(false);
     }
 
     private static void transformItem(ItemEntity itemEntity, ServerLevel level, ItemTransformRecipe recipe) {

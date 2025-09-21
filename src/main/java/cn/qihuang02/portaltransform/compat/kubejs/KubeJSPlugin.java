@@ -1,6 +1,7 @@
 package cn.qihuang02.portaltransform.compat.kubejs;
 
 import cn.qihuang02.portaltransform.compat.kubejs.binding.ByproductsBinding;
+import cn.qihuang02.portaltransform.compat.kubejs.components.BiomesComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.DimensionsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.LevelComponent;
@@ -28,6 +29,7 @@ public class KubeJSPlugin implements dev.latvian.mods.kubejs.plugin.KubeJSPlugin
         registry.register(LevelComponent.DIMENSION);
         registry.register(ByproductsComponent.BYPRODUCT);
         registry.register(DimensionsComponent.DIMENSIONS);
+        registry.register(BiomesComponent.BIOMES);
         registry.register(WeatherComponent.WEATHER);
     }
 

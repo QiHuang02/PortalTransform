@@ -1,6 +1,7 @@
 package cn.qihuang02.portaltransform.compat.emi;
 
 import cn.qihuang02.portaltransform.PortalTransform;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
@@ -20,6 +21,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -117,7 +119,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
             }
         });
 
-        widgets.addTooltipText(getDimensionTooltipLines(), 57, 46, 28, 28);
+        widgets.addTooltipText(getConditionTooltipLines(), 57, 46, 28, 28);
 
         widgets.addSlot(input, 15, 54).drawBack(false).recipeContext(this);
         widgets.addSlot(output, 107, 54).drawBack(false).recipeContext(this).appendTooltip(() -> {
@@ -136,8 +138,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                             ? Component.translatable(dimensionLangKey).withStyle(ChatFormatting.GOLD)
                             : Component.literal(loc.toString()).withStyle(ChatFormatting.YELLOW);
                 })
-                .orElse(Component.translatable("tooltip.portaltransform.item_transform.no_requirement") // "无要求"
-                        .withStyle(ChatFormatting.GREEN));
+                .orElse(getNoRequirementComponent());
     }
 
     private @NotNull @Unmodifiable List<Component> getDimensionTooltipLines() {
@@ -148,7 +149,50 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                 .append(Component.literal(" -> ").withStyle(ChatFormatting.GRAY))
                 .append(to);
 
-        return List.of(line);
+        return List.of(createRequirementLine(line));
+    }
+
+    private @NotNull @Unmodifiable List<Component> getBiomeTooltipLines() {
+        Optional<Biomes> biomes = recipe.getBiomes();
+        List<Component> lines = new ArrayList<>();
+
+        if (biomes.isEmpty()) {
+            lines.add(createRequirementLine(getNoRequirementComponent()));
+        } else {
+            for (ResourceKey<Biome> biomeKey : biomes.get().biomes()) {
+                lines.add(createRequirementLine(getBiomeComponent(biomeKey)));
+            }
+        }
+
+        return List.copyOf(lines);
+    }
+
+    private @NotNull Component getBiomeComponent(@NotNull ResourceKey<Biome> biomeKey) {
+        ResourceLocation loc = biomeKey.location();
+        String biomeLangKey = "biome." + loc.getNamespace() + "." + loc.getPath();
+        if (I18n.exists(biomeLangKey)) {
+            return Component.translatable(biomeLangKey).withStyle(ChatFormatting.GREEN);
+        }
+        return Component.literal(loc.toString()).withStyle(ChatFormatting.YELLOW);
+    }
+
+    private @NotNull Component getNoRequirementComponent() {
+        return Component.translatable("tooltip.portaltransform.item_transform.no_requirement")
+                .withStyle(ChatFormatting.GREEN);
+    }
+
+    private @NotNull Component createRequirementLine(@NotNull Component value) {
+        return Component.literal(" - ").withStyle(ChatFormatting.DARK_GRAY)
+                .append(value.copy());
+    }
+
+    private @NotNull @Unmodifiable List<Component> getConditionTooltipLines() {
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.translatable("tooltip.portaltransform.item_transform.dimensions").withStyle(ChatFormatting.GOLD));
+        lines.addAll(getDimensionTooltipLines());
+        lines.add(Component.translatable("tooltip.portaltransform.item_transform.biomes").withStyle(ChatFormatting.DARK_GREEN));
+        lines.addAll(getBiomeTooltipLines());
+        return List.copyOf(lines);
     }
 
     private @NotNull Component getWeatherComponent(@NotNull Optional<Weather> weather) {

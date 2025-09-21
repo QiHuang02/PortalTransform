@@ -1,5 +1,6 @@
 package cn.qihuang02.portaltransform.recipe;
 
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Dimensions;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
@@ -32,6 +33,7 @@ public record ItemTransformRecipe(
         Optional<List<Byproducts>> byproducts,
         Optional<Dimensions> dimensions,
         Optional<Weather> weather,
+        Optional<Biomes> biomes,
         float transformChance
 ) implements Recipe<SimpleItemInput> {
     private static final int MAX_BYPRODUCT_TYPES = 9;
@@ -108,6 +110,10 @@ public record ItemTransformRecipe(
         return weather;
     }
 
+    public Optional<Biomes> getBiomes() {
+        return biomes;
+    }
+
     @Override
     public @NotNull ItemStack getResultItem(HolderLookup.@NotNull Provider registries) {
         return result.copy();
@@ -120,6 +126,7 @@ public record ItemTransformRecipe(
                 ByteBufCodecs.optional(ByteBufCodecs.collection(ArrayList::new, Byproducts.STREAM_CODEC)), ItemTransformRecipe::byproducts,
                 ByteBufCodecs.optional(Dimensions.STREAM_CODEC), ItemTransformRecipe::dimensions,
                 ByteBufCodecs.optional(Weather.STREAM_CODEC), ItemTransformRecipe::weather,
+                ByteBufCodecs.optional(Biomes.STREAM_CODEC), ItemTransformRecipe::biomes,
                 ByteBufCodecs.FLOAT, ItemTransformRecipe::transformChance,
                 ItemTransformRecipe::new
         );
@@ -131,6 +138,7 @@ public record ItemTransformRecipe(
                         Byproducts.CODEC.codec().listOf().optionalFieldOf("byproducts").forGetter(ItemTransformRecipe::byproducts),
                         Dimensions.CODEC.optionalFieldOf("dimensions").forGetter(ItemTransformRecipe::dimensions),
                         Weather.CODEC.optionalFieldOf("weather").forGetter(ItemTransformRecipe::weather),
+                        Biomes.CODEC.optionalFieldOf("biomes").forGetter(ItemTransformRecipe::biomes),
                         Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0F).forGetter(ItemTransformRecipe::transformChance)
                 ).apply(instance, ItemTransformRecipe::new)
         );

@@ -1,9 +1,11 @@
 package cn.qihuang02.portaltransform.compat.kubejs.schema;
 
+import cn.qihuang02.portaltransform.compat.kubejs.components.BiomesComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.DimensionsComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.WeatherComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.recipe.ItemTransformKubeRecipe;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Dimensions;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
@@ -29,6 +31,9 @@ public interface PortalItemTransformRecipeSchema {
     RecipeKey<Weather> WEATHER = WeatherComponent.WEATHER
             .otherKey("weather").optional(Weather.ANY).functionNames(List.of("weather"));
 
+    RecipeKey<Biomes> BIOMES = BiomesComponent.BIOMES
+            .otherKey("biomes").defaultOptional().functionNames(List.of("biomes", "biome"));
+
     RecipeKey<List<Byproducts>> BYPRODUCTS = ByproductsComponent.LIST
             .otherKey("byproducts").defaultOptional().functionNames(List.of("byproducts"));
 
@@ -41,6 +46,7 @@ public interface PortalItemTransformRecipeSchema {
             BYPRODUCTS,
             DIMENSIONS,
             WEATHER,
+            BIOMES,
             TRANSFORM_CHANCE
     ).factory(ItemTransformKubeRecipe.FACTORY);
 }

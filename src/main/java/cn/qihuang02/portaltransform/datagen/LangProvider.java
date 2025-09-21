@@ -15,6 +15,8 @@ public class LangProvider extends LanguageProvider {
         this.add("emi.category.portaltransform.item_transform", "Item Transform");
 
         this.add("tooltip.portaltransform.item_transform.no_requirement", "No requirement");
+        this.add("tooltip.portaltransform.item_transform.dimensions", "Dimensions");
+        this.add("tooltip.portaltransform.item_transform.biomes", "Biomes");
 
         this.add("tooltip.portaltransform.item_transform.byproduct", "Byproduct");
         this.add("tooltip.portaltransform.item_transform.byproduct.chance", "Chance: %s");
