@@ -120,16 +120,48 @@ public record ItemTransformRecipe(
     }
 
     public static class Serializer implements RecipeSerializer<ItemTransformRecipe> {
-        public static final StreamCodec<RegistryFriendlyByteBuf, ItemTransformRecipe> STREAM_CODEC = StreamCodec.composite(
-                Ingredient.CONTENTS_STREAM_CODEC, ItemTransformRecipe::inputIngredient,
-                ItemStack.STREAM_CODEC, ItemTransformRecipe::result,
-                ByteBufCodecs.optional(ByteBufCodecs.collection(ArrayList::new, Byproducts.STREAM_CODEC)), ItemTransformRecipe::byproducts,
-                ByteBufCodecs.optional(Dimensions.STREAM_CODEC), ItemTransformRecipe::dimensions,
-                ByteBufCodecs.optional(Weather.STREAM_CODEC), ItemTransformRecipe::weather,
-                ByteBufCodecs.optional(Biomes.STREAM_CODEC), ItemTransformRecipe::biomes,
-                ByteBufCodecs.FLOAT, ItemTransformRecipe::transformChance,
-                ItemTransformRecipe::new
-        );
+        private static final StreamCodec<RegistryFriendlyByteBuf, Optional<List<Byproducts>>> OPTIONAL_BYPRODUCTS_STREAM_CODEC =
+                ByteBufCodecs.optional(ByteBufCodecs.collection(ArrayList::new, Byproducts.STREAM_CODEC));
+        private static final StreamCodec<RegistryFriendlyByteBuf, Optional<Dimensions>> OPTIONAL_DIMENSIONS_STREAM_CODEC =
+                ByteBufCodecs.optional(Dimensions.STREAM_CODEC);
+        private static final StreamCodec<RegistryFriendlyByteBuf, Optional<Biomes>> OPTIONAL_BIOMES_STREAM_CODEC =
+                ByteBufCodecs.optional(Biomes.STREAM_CODEC);
+
+        public static final StreamCodec<RegistryFriendlyByteBuf, ItemTransformRecipe> STREAM_CODEC =
+                StreamCodec.of(Serializer::encode, Serializer::decode);
+
+        private static void encode(RegistryFriendlyByteBuf buf, ItemTransformRecipe recipe) {
+            Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.inputIngredient());
+            ItemStack.STREAM_CODEC.encode(buf, recipe.result());
+            OPTIONAL_BYPRODUCTS_STREAM_CODEC.encode(buf, recipe.byproducts());
+            OPTIONAL_DIMENSIONS_STREAM_CODEC.encode(buf, recipe.dimensions());
+            encodeWeather(buf, recipe.weather());
+            OPTIONAL_BIOMES_STREAM_CODEC.encode(buf, recipe.biomes());
+            ByteBufCodecs.FLOAT.encode(buf, recipe.transformChance());
+        }
+
+        private static ItemTransformRecipe decode(RegistryFriendlyByteBuf buf) {
+            Ingredient input = Ingredient.CONTENTS_STREAM_CODEC.decode(buf);
+            ItemStack result = ItemStack.STREAM_CODEC.decode(buf);
+            Optional<List<Byproducts>> byproducts = OPTIONAL_BYPRODUCTS_STREAM_CODEC.decode(buf);
+            Optional<Dimensions> dimensions = OPTIONAL_DIMENSIONS_STREAM_CODEC.decode(buf);
+            Optional<Weather> weather = decodeWeather(buf);
+            Optional<Biomes> biomes = OPTIONAL_BIOMES_STREAM_CODEC.decode(buf);
+            float chance = ByteBufCodecs.FLOAT.decode(buf);
+            return new ItemTransformRecipe(input, result, byproducts, dimensions, weather, biomes, chance);
+        }
+
+        private static void encodeWeather(RegistryFriendlyByteBuf buf, Optional<Weather> weather) {
+            buf.writeBoolean(weather.isPresent());
+            weather.ifPresent(value -> Weather.STREAM_CODEC.encode(buf, value));
+        }
+
+        private static Optional<Weather> decodeWeather(RegistryFriendlyByteBuf buf) {
+            if (!buf.readBoolean()) {
+                return Optional.empty();
+            }
+            return Optional.of(Weather.STREAM_CODEC.decode(buf));
+        }
 
         private static final MapCodec<ItemTransformRecipe> BASE_CODEC = RecordCodecBuilder.mapCodec(
                 instance -> instance.group(

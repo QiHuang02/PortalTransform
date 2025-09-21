@@ -131,7 +131,7 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     }
 
     private @NotNull Component getDimensionComponent(@NotNull Optional<ResourceKey<Level>> dimensionKey) {
-        return dimensionKey.map(key -> {
+        return dimensionKey.<Component>map(key -> {
                     ResourceLocation loc = key.location();
                     String dimensionLangKey = "dimension." + loc.getNamespace() + "." + loc.getPath();
                     return I18n.exists(dimensionLangKey)
