@@ -10,5 +10,10 @@
   "tooltip.portaltransform.item_transform.weather.any": "任意",
   "tooltip.portaltransform.item_transform.weather.clear": "晴天",
   "tooltip.portaltransform.item_transform.weather.rain": "雨天",
-  "tooltip.portaltransform.item_transform.weather.thunder": "雷暴雨"
+  "tooltip.portaltransform.item_transform.weather.thunder": "雷暴雨",
+  "tooltip.portaltransform.item_transform.catalyst": "催化剂",
+  "tooltip.portaltransform.item_transform.catalyst.range": "范围: 水平 %s 格, 垂直 %s 格",
+  "tooltip.portaltransform.item_transform.energy": "能量",
+  "tooltip.portaltransform.item_transform.energy.amount": "消耗 %s FE",
+  "tooltip.portaltransform.item_transform.energy.range": "检测范围: 水平 %s 格, 垂直 %s 格"
 }
