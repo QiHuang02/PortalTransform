@@ -3,12 +3,15 @@ package cn.qihuang02.portaltransform.event;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.Recipes;
 import cn.qihuang02.portaltransform.recipe.SimpleItemInput;
 import cn.qihuang02.portaltransform.util.InventoryUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -19,6 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -61,25 +65,55 @@ public class PortalTransformHandler {
         }
 
         getValidRecipeForContext(itemEntity, serverLevel, event.getDimension())
-                .ifPresent(holder -> processTransformation(event, itemEntity, serverLevel, holder));
+                .ifPresent(match -> processTransformation(event, itemEntity, serverLevel, match));
     }
 
-    private static Optional<RecipeHolder<ItemTransformRecipe>> getValidRecipeForContext(ItemEntity itemEntity, ServerLevel level, ResourceKey<Level> targetDimKey) {
+    private static Optional<RecipeMatch> getValidRecipeForContext(ItemEntity itemEntity, ServerLevel level, ResourceKey<Level> targetDimKey) {
         return findItemRecipe(itemEntity, level)
-                .filter(holder -> {
-                    ItemTransformRecipe recipe = holder.value();
-                    return matchesItemDimensionRequirements(recipe, level.dimension(), targetDimKey) &&
-                            matchesWeather(recipe, level);
-                });
+                .flatMap(holder -> createMatch(holder, itemEntity, level, targetDimKey));
     }
 
-    private static void processTransformation(EntityTravelToDimensionEvent event, ItemEntity itemEntity, ServerLevel level, RecipeHolder<ItemTransformRecipe> holder) {
+    private static Optional<RecipeMatch> createMatch(RecipeHolder<ItemTransformRecipe> holder, ItemEntity itemEntity, ServerLevel level, ResourceKey<Level> targetDimKey) {
         ItemTransformRecipe recipe = holder.value();
+        BlockPos itemPos = itemEntity.blockPosition();
+
+        if (!matchesItemDimensionRequirements(recipe, level.dimension(), targetDimKey) ||
+                !matchesWeather(recipe, level) ||
+                !matchesBiome(recipe, level, itemPos) ||
+                !matchesHeight(recipe, itemPos.getY()) ||
+                !matchesTime(recipe, level) ||
+                !matchesItemData(recipe, itemEntity.getItem()) ||
+                !matchesCatalyst(recipe, level, itemPos)) {
+            return Optional.empty();
+        }
+
+        Optional<EnergyRequirement.EnergyPlan> energyPlan = Optional.empty();
+        if (recipe.getEnergyRequirement().isPresent()) {
+            Optional<EnergyRequirement.EnergyPlan> planned = planEnergy(recipe, level, itemPos);
+            if (planned.isEmpty()) {
+                LOGGER.debug("Skipping portal transformation for {} because no energy source was found near {}.", recipe, itemPos);
+                return Optional.empty();
+            }
+            energyPlan = planned;
+        }
+
+        return Optional.of(new RecipeMatch(holder, energyPlan));
+    }
+
+    private static void processTransformation(EntityTravelToDimensionEvent event, ItemEntity itemEntity, ServerLevel level, RecipeMatch match) {
+        ItemTransformRecipe recipe = match.holder().value();
         float chance = recipe.transformChance();
 
         event.setCanceled(true);
 
         if (level.random.nextFloat() < chance) {
+            if (match.energyPlan().isPresent()) {
+                EnergyRequirement.EnergyPlan plan = match.energyPlan().get();
+                if (!plan.consume(level)) {
+                    LOGGER.debug("Skipping portal transformation for {} due to insufficient energy.", recipe);
+                    return;
+                }
+            }
             transformItem(itemEntity, level, recipe);
         } else {
             itemEntity.discard();
@@ -136,6 +170,48 @@ public class PortalTransformHandler {
             case THUNDER -> isThundering;
             default -> true;
         };
+    }
+
+    private static boolean matchesBiome(@NotNull ItemTransformRecipe recipe, @NotNull ServerLevel level, @NotNull BlockPos pos) {
+        Optional<Biomes> requiredBiomes = recipe.getBiomes();
+
+        if (requiredBiomes.isEmpty()) {
+            return true;
+        }
+
+        Holder<Biome> biomeHolder = level.getBiome(pos);
+        return biomeHolder.unwrapKey()
+                .map(requiredBiomes.get()::contains)
+                .orElse(false);
+    }
+
+    private static boolean matchesHeight(@NotNull ItemTransformRecipe recipe, int yLevel) {
+        return recipe.getHeightRequirement()
+                .map(requirement -> requirement.matches(yLevel))
+                .orElse(true);
+    }
+
+    private static boolean matchesTime(@NotNull ItemTransformRecipe recipe, @NotNull ServerLevel level) {
+        return recipe.getTimeRequirement()
+                .map(condition -> condition.matches(level))
+                .orElse(true);
+    }
+
+    private static boolean matchesCatalyst(@NotNull ItemTransformRecipe recipe, @NotNull ServerLevel level, @NotNull BlockPos pos) {
+        return recipe.getCatalystRequirement()
+                .map(requirement -> requirement.matches(level, pos))
+                .orElse(true);
+    }
+
+    private static Optional<EnergyRequirement.EnergyPlan> planEnergy(@NotNull ItemTransformRecipe recipe, @NotNull ServerLevel level, @NotNull BlockPos pos) {
+        return recipe.getEnergyRequirement()
+                .flatMap(requirement -> requirement.planConsumption(level, pos));
+    }
+
+    private static boolean matchesItemData(@NotNull ItemTransformRecipe recipe, @NotNull ItemStack stack) {
+        return recipe.getItemDataPredicate()
+                .map(predicate -> predicate.test(stack))
+                .orElse(true);
     }
 
     private static void transformItem(ItemEntity itemEntity, ServerLevel level, ItemTransformRecipe recipe) {
@@ -238,5 +314,9 @@ public class PortalTransformHandler {
                 0.1,
                 (random.nextFloat() - 0.5) * 0.1
         );
+    }
+
+    private record RecipeMatch(RecipeHolder<ItemTransformRecipe> holder,
+                               Optional<EnergyRequirement.EnergyPlan> energyPlan) {
     }
 }
