@@ -2,9 +2,12 @@ package cn.qihuang02.portaltransform.event;
 
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
+import cn.qihuang02.portaltransform.compat.kubejs.event.PortalTransformKubeEvents;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement.EnergyPlan;
+import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement.EnergyTarget;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.Recipes;
@@ -14,6 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
@@ -26,12 +30,18 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 @EventBusSubscriber(
         modid = PortalTransform.MODID,
@@ -114,7 +124,7 @@ public class PortalTransformHandler {
                     return;
                 }
             }
-            transformItem(itemEntity, level, recipe);
+            transformItem(itemEntity, level, match, event.getDimension());
         } else {
             itemEntity.discard();
         }
@@ -214,15 +224,19 @@ public class PortalTransformHandler {
                 .orElse(true);
     }
 
-    private static void transformItem(ItemEntity itemEntity, ServerLevel level, ItemTransformRecipe recipe) {
+    private static void transformItem(ItemEntity itemEntity, ServerLevel level, RecipeMatch match, ResourceKey<Level> targetDimKey) {
         Objects.requireNonNull(itemEntity, "ItemEntity cannot be null");
         Objects.requireNonNull(level, "Level cannot be null");
-        Objects.requireNonNull(recipe, "Recipe cannot be null");
+        Objects.requireNonNull(match, "Recipe match cannot be null");
+
+        ItemTransformRecipe recipe = match.holder().value();
+        ResourceLocation recipeId = match.holder().id();
 
         BlockPos spawnPos = itemEntity.blockPosition();
         Vec3 pos = itemEntity.position();
         Vec3 motion = itemEntity.getDeltaMovement();
         int originalInputCount = itemEntity.getItem().getCount();
+        ItemStack inputCopy = itemEntity.getItem().copy();
         RandomSource random = level.random;
 
         ItemStack recipeResult = recipe.getResultItem(level.registryAccess());
@@ -239,6 +253,7 @@ public class PortalTransformHandler {
         } else {
             outputStack = recipeResult.copyWithCount(originalInputCount);
         }
+        ItemStack producedStack = outputStack.copy();
 
         ItemStack remainingOutput = InventoryUtil.tryPlaceInNearbyInv(level, spawnPos, outputStack);
 
@@ -249,38 +264,73 @@ public class PortalTransformHandler {
         }
 
         // Process byproducts
-        spawnByproducts(level, pos, motion, recipe, originalInputCount, random);
+        List<ItemStack> producedByproducts = spawnByproducts(level, pos, motion, recipe, originalInputCount, random);
+
+        PortalItemTransformedEvent transformedEvent = new PortalItemTransformedEvent(
+                level,
+                targetDimKey,
+                itemEntity,
+                pos,
+                inputCopy,
+                producedStack,
+                remainingOutput,
+                producedByproducts,
+                recipe,
+                recipeId,
+                copyEnergyPlan(match.energyPlan())
+        );
+
+        NeoForge.EVENT_BUS.post(transformedEvent);
+
+        if (ModList.get().isLoaded("kubejs")) {
+            PortalTransformKubeEvents.postItemTransformed(transformedEvent);
+        }
     }
 
-    private static void spawnByproducts(ServerLevel level, Vec3 pos, Vec3 motion, ItemTransformRecipe recipe, int originalInputCount, RandomSource random) {
-        recipe.getByproducts().ifPresent(byproducts -> {
-            // Group byproducts by type to batch spawn them
-            var byproductCounts = new java.util.HashMap<ItemStack, Integer>();
-            
-            for (Byproducts definition : byproducts) {
-                for (int i = 0; i < originalInputCount; i++) {
-                    definition.getResult(random).ifPresent(byproductStack -> {
-                        // Find existing entry or create new one
-                        ItemStack existingKey = byproductCounts.keySet().stream()
-                                .filter(stack -> ItemStack.isSameItemSameComponents(stack, byproductStack))
-                                .findFirst()
-                                .orElse(null);
-                                
-                        if (existingKey != null) {
-                            byproductCounts.put(existingKey, byproductCounts.get(existingKey) + byproductStack.getCount());
-                        } else {
-                            byproductCounts.put(byproductStack.copy(), byproductStack.getCount());
-                        }
-                    });
-                }
+    private static Optional<EnergyPlan> copyEnergyPlan(Optional<EnergyPlan> originalPlan) {
+        return originalPlan.map(plan -> new EnergyPlan(
+                plan.targets().stream()
+                        .map(target -> new EnergyTarget(target.pos(), target.direction(), target.amount()))
+                        .toList()
+        ));
+    }
+
+    private static List<ItemStack> spawnByproducts(ServerLevel level, Vec3 pos, Vec3 motion, ItemTransformRecipe recipe, int originalInputCount, RandomSource random) {
+        Optional<List<Byproducts>> byproductsOpt = recipe.getByproducts();
+        if (byproductsOpt.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        HashMap<ItemStack, Integer> byproductCounts = new HashMap<>();
+        for (Byproducts definition : byproductsOpt.get()) {
+            for (int i = 0; i < originalInputCount; i++) {
+                definition.getResult(random).ifPresent(byproductStack -> {
+                    ItemStack existingKey = byproductCounts.keySet().stream()
+                            .filter(stack -> ItemStack.isSameItemSameComponents(stack, byproductStack))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (existingKey != null) {
+                        byproductCounts.put(existingKey, byproductCounts.get(existingKey) + byproductStack.getCount());
+                    } else {
+                        byproductCounts.put(byproductStack.copy(), byproductStack.getCount());
+                    }
+                });
             }
-            
-            // Spawn batched byproducts
-            byproductCounts.forEach((stack, totalCount) -> {
-                ItemStack spawnStack = stack.copyWithCount(totalCount);
-                spawnItemByproduct(level, pos, motion, spawnStack, random);
-            });
+        }
+
+        if (byproductCounts.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ItemStack> producedStacks = new ArrayList<>(byproductCounts.size());
+        byproductCounts.forEach((stack, totalCount) -> {
+            ItemStack spawnStack = stack.copyWithCount(totalCount);
+            spawnItemByproduct(level, pos, motion, spawnStack, random);
+            producedStacks.add(spawnStack.copy());
         });
+
+        return producedStacks;
     }
 
     private static void spawnItemByproduct(ServerLevel level, Vec3 pos, Vec3 motion, @NotNull ItemStack byproductStack, RandomSource random) {
