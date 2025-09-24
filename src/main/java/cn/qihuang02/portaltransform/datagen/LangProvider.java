@@ -2,7 +2,7 @@ package cn.qihuang02.portaltransform.datagen;
 
 import cn.qihuang02.portaltransform.PortalTransform;
 import net.minecraft.data.PackOutput;
-import net.neoforged.neoforge.common.data.LanguageProvider;
+import net.minecraftforge.common.data.LanguageProvider;
 
 public class LangProvider extends LanguageProvider {
     public LangProvider(PackOutput output) {

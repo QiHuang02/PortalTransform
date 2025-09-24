@@ -2,7 +2,6 @@ package cn.qihuang02.portaltransform.event;
 
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.component.Components;
-import cn.qihuang02.portaltransform.compat.kubejs.event.PortalTransformKubeEvents;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement;
@@ -11,28 +10,25 @@ import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement.Energ
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import cn.qihuang02.portaltransform.recipe.Recipes;
-import cn.qihuang02.portaltransform.recipe.SimpleItemInput;
 import cn.qihuang02.portaltransform.util.InventoryUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +41,7 @@ import java.util.List;
 
 @EventBusSubscriber(
         modid = PortalTransform.MODID,
-        bus = EventBusSubscriber.Bus.GAME)
+        bus = EventBusSubscriber.Bus.FORGE)
 public class PortalTransformHandler {
     private static final Logger LOGGER = PortalTransform.LOGGER;
 
@@ -80,11 +76,11 @@ public class PortalTransformHandler {
 
     private static Optional<RecipeMatch> getValidRecipeForContext(ItemEntity itemEntity, ServerLevel level, ResourceKey<Level> targetDimKey) {
         return findItemRecipe(itemEntity, level)
-                .flatMap(holder -> createMatch(holder, itemEntity, level, targetDimKey));
+                .flatMap(result -> createMatch(result, itemEntity, level, targetDimKey));
     }
 
-    private static Optional<RecipeMatch> createMatch(RecipeHolder<ItemTransformRecipe> holder, ItemEntity itemEntity, ServerLevel level, ResourceKey<Level> targetDimKey) {
-        ItemTransformRecipe recipe = holder.value();
+    private static Optional<RecipeMatch> createMatch(RecipeResult recipeResult, ItemEntity itemEntity, ServerLevel level, ResourceKey<Level> targetDimKey) {
+        ItemTransformRecipe recipe = recipeResult.recipe();
         BlockPos itemPos = itemEntity.blockPosition();
 
         if (!matchesItemDimensionRequirements(recipe, level.dimension(), targetDimKey) ||
@@ -107,11 +103,11 @@ public class PortalTransformHandler {
             energyPlan = planned;
         }
 
-        return Optional.of(new RecipeMatch(holder, energyPlan));
+        return Optional.of(new RecipeMatch(recipeResult, energyPlan));
     }
 
     private static void processTransformation(EntityTravelToDimensionEvent event, ItemEntity itemEntity, ServerLevel level, RecipeMatch match) {
-        ItemTransformRecipe recipe = match.holder().value();
+        ItemTransformRecipe recipe = match.recipeResult().recipe();
         float chance = recipe.transformChance();
 
         event.setCanceled(true);
@@ -131,11 +127,10 @@ public class PortalTransformHandler {
     }
 
     private static boolean hasNoPortalTransformComponent(@NotNull ItemEntity itemEntity) {
-        DataComponentType<Boolean> componentType = Components.NO_PORTAL_TRANSFORM.get();
-        return Boolean.TRUE.equals(itemEntity.getItem().get(componentType));
+        return Components.hasNoPortalTransform(itemEntity.getItem());
     }
 
-    private static Optional<RecipeHolder<ItemTransformRecipe>> findItemRecipe(@NotNull ItemEntity itemEntity, ServerLevel currentLevel) {
+    private static Optional<RecipeResult> findItemRecipe(@NotNull ItemEntity itemEntity, ServerLevel currentLevel) {
         ItemStack inputStack = itemEntity.getItem();
         if (inputStack.isEmpty()) {
             return Optional.empty();
@@ -144,9 +139,9 @@ public class PortalTransformHandler {
         RecipeManager recipeManager = currentLevel.getRecipeManager();
         return recipeManager.getRecipeFor(
                 Recipes.PORTAL_ITEM_TRANSFORM_TYPE.get(),
-                new SimpleItemInput(inputStack),
+                new SimpleContainer(inputStack),
                 currentLevel
-        );
+        ).map(recipe -> new RecipeResult(recipe, recipe.getId()));
     }
 
     private static boolean matchesItemDimensionRequirements(@NotNull ItemTransformRecipe recipe, ResourceKey<Level> currentDimKey, ResourceKey<Level> targetDimKey) {
@@ -220,7 +215,7 @@ public class PortalTransformHandler {
 
     private static boolean matchesItemData(@NotNull ItemTransformRecipe recipe, @NotNull ItemStack stack) {
         return recipe.getItemDataPredicate()
-                .map(predicate -> predicate.test(stack))
+                .map(predicate -> predicate.matches(stack))
                 .orElse(true);
     }
 
@@ -229,8 +224,8 @@ public class PortalTransformHandler {
         Objects.requireNonNull(level, "Level cannot be null");
         Objects.requireNonNull(match, "Recipe match cannot be null");
 
-        ItemTransformRecipe recipe = match.holder().value();
-        ResourceLocation recipeId = match.holder().id();
+        ItemTransformRecipe recipe = match.recipeResult().recipe();
+        ResourceLocation recipeId = match.recipeResult().id();
 
         BlockPos spawnPos = itemEntity.blockPosition();
         Vec3 pos = itemEntity.position();
@@ -280,11 +275,7 @@ public class PortalTransformHandler {
                 copyEnergyPlan(match.energyPlan())
         );
 
-        NeoForge.EVENT_BUS.post(transformedEvent);
-
-        if (ModList.get().isLoaded("kubejs")) {
-            PortalTransformKubeEvents.postItemTransformed(transformedEvent);
-        }
+        MinecraftForge.EVENT_BUS.post(transformedEvent);
     }
 
     private static Optional<EnergyPlan> copyEnergyPlan(Optional<EnergyPlan> originalPlan) {
@@ -306,7 +297,7 @@ public class PortalTransformHandler {
             for (int i = 0; i < originalInputCount; i++) {
                 definition.getResult(random).ifPresent(byproductStack -> {
                     ItemStack existingKey = byproductCounts.keySet().stream()
-                            .filter(stack -> ItemStack.isSameItemSameComponents(stack, byproductStack))
+                            .filter(stack -> ItemStack.isSameItemSameTags(stack, byproductStack))
                             .findFirst()
                             .orElse(null);
 
@@ -345,8 +336,7 @@ public class PortalTransformHandler {
         int maxStackSize = byproductStack.getMaxStackSize();
         int total = byproductStack.getCount();
 
-        DataComponentType<Boolean> componentType = Components.NO_PORTAL_TRANSFORM.get();
-        byproductStack.set(componentType, true);
+        Components.markNoPortalTransform(byproductStack);
 
         while (total > 0) {
             int spawnCount = Math.min(total, maxStackSize);
@@ -366,7 +356,10 @@ public class PortalTransformHandler {
         );
     }
 
-    private record RecipeMatch(RecipeHolder<ItemTransformRecipe> holder,
+    private record RecipeResult(ItemTransformRecipe recipe, ResourceLocation id) {
+    }
+
+    private record RecipeMatch(RecipeResult recipeResult,
                                Optional<EnergyRequirement.EnergyPlan> energyPlan) {
     }
 }

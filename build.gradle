@@ -1,92 +1,66 @@
 plugins {
-    id 'java-library'
+    id 'java'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.184'
+    id 'net.minecraftforge.gradle' version '6.0.24'
 }
 
-tasks.named('wrapper', Wrapper).configure {
-    distributionType = Wrapper.DistributionType.BIN
-}
-
-version = mod_version
 group = mod_group_id
-
-repositories {
-    mavenLocal()
-
-    maven {
-        url = uri("https://maven.latvian.dev/releases")
-        content {
-            includeGroup "dev.latvian.mods"
-            includeGroup "dev.latvian.apps"
-        }
-    }
-    maven {
-        url = uri('https://jitpack.io')
-        content {
-            includeGroup "com.github.rtyley"
-        }
-    }
-
-    maven {
-        name = "TerraformersMC"
-        url = uri("https://maven.terraformersmc.com/")
-    }
-}
+version = mod_version
 
 base {
     archivesName = mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    withSourcesJar()
+}
 
-        systemProperty 'forge.logging.console.level', 'debug'
+minecraft {
+    mappings channel: mapping_channel, version: mapping_version
 
-        modSource project.sourceSets.main
-    }
+    runs {
+        configureEach {
+            workingDirectory project.file('runs/' + name)
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                portaltransform {
+                    source sourceSets.main
+                }
+            }
+        }
 
-    client {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-    }
+        client {}
 
-    server {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        argument '--nogui'
-    }
-    gameTestServer {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-    }
+        server {
+            args '--nogui'
+        }
 
-    data {
-        arguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        gameTestServer {}
+
+        data {
+            args '--mod', project.mod_id, '--all', '--output', file('src/generated/resources').absolutePath,
+                    '--existing', file('src/main/resources').absolutePath
+        }
     }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
-configurations {
-    runtimeClasspath.extendsFrom localRuntime
+repositories {
+    mavenLocal()
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:${neo_version}"
-
-    compileOnly "dev.latvian.mods:kubejs-neoforge:${kubejs_version}"
-
-    compileOnly "dev.emi:emi-neoforge:${emi_version}:api"
-    runtimeOnly "dev.emi:emi-neoforge:${emi_version}"
-
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 }
 
-tasks.withType(ProcessResources).configureEach {
+tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
             minecraft_version      : minecraft_version,
             minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            neo_version_range      : neo_version_range,
+            forge_version_range    : forge_version_range,
             loader_version_range   : loader_version_range,
             mod_id                 : mod_id,
             mod_name               : mod_name,
@@ -97,7 +71,7 @@ tasks.withType(ProcessResources).configureEach {
     ]
     inputs.properties replaceProperties
 
-    filesMatching(['META-INF/neoforge.mods.toml']) {
+    filesMatching('META-INF/mods.toml') {
         expand replaceProperties
     }
 }
@@ -117,11 +91,4 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-}
-
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
-    }
 }

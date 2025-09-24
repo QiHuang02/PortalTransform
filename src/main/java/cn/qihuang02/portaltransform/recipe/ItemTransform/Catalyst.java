@@ -7,9 +7,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
@@ -33,21 +31,25 @@ public record Catalyst(
     public static final int DEFAULT_VERTICAL_RANGE = 1;
     private static final int MAX_RANGE = 16;
 
-    private static final StreamCodec<RegistryFriendlyByteBuf, List<ResourceKey<Block>>> BLOCK_LIST_STREAM_CODEC =
-            ByteBufCodecs.collection(ArrayList::new, ResourceKey.streamCodec(Registries.BLOCK));
+    public void toNetwork(FriendlyByteBuf buf) {
+        buf.writeVarInt(blocks.size());
+        for (ResourceKey<Block> key : blocks) {
+            buf.writeResourceLocation(key.location());
+        }
+        buf.writeVarInt(horizontalRange);
+        buf.writeVarInt(verticalRange);
+    }
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, Catalyst> STREAM_CODEC = StreamCodec.of(
-            (buf, catalyst) -> {
-                BLOCK_LIST_STREAM_CODEC.encode(buf, catalyst.blocks);
-                buf.writeVarInt(catalyst.horizontalRange);
-                buf.writeVarInt(catalyst.verticalRange);
-            },
-            buf -> new Catalyst(
-                    BLOCK_LIST_STREAM_CODEC.decode(buf),
-                    buf.readVarInt(),
-                    buf.readVarInt()
-            )
-    );
+    public static Catalyst fromNetwork(FriendlyByteBuf buf) {
+        int size = buf.readVarInt();
+        List<ResourceKey<Block>> entries = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            entries.add(ResourceKey.create(Registries.BLOCK, buf.readResourceLocation()));
+        }
+        int horizontalRange = buf.readVarInt();
+        int verticalRange = buf.readVarInt();
+        return new Catalyst(entries, horizontalRange, verticalRange);
+    }
 
     private static final MapCodec<Catalyst> BASE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             ResourceKey.codec(Registries.BLOCK).listOf().fieldOf("blocks").forGetter(Catalyst::blocks),

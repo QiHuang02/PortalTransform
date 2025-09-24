@@ -6,11 +6,12 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerLevel;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,18 +32,19 @@ public record EnergyRequirement(
     public static final int DEFAULT_VERTICAL_RANGE = 1;
     private static final int MAX_RANGE = 16;
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, EnergyRequirement> STREAM_CODEC = StreamCodec.of(
-            (buf, requirement) -> {
-                buf.writeVarInt(requirement.amount);
-                buf.writeVarInt(requirement.horizontalRange);
-                buf.writeVarInt(requirement.verticalRange);
-            },
-            buf -> new EnergyRequirement(
-                    buf.readVarInt(),
-                    buf.readVarInt(),
-                    buf.readVarInt()
-            )
-    );
+    public void toNetwork(FriendlyByteBuf buf) {
+        buf.writeVarInt(amount);
+        buf.writeVarInt(horizontalRange);
+        buf.writeVarInt(verticalRange);
+    }
+
+    public static EnergyRequirement fromNetwork(FriendlyByteBuf buf) {
+        return new EnergyRequirement(
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readVarInt()
+        );
+    }
 
     private static final MapCodec<EnergyRequirement> BASE_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             Codec.intRange(1, Integer.MAX_VALUE).fieldOf("amount").forGetter(EnergyRequirement::amount),
@@ -104,28 +106,39 @@ public record EnergyRequirement(
             return 0;
         }
 
-        IEnergyStorage storage = level.getCapability(Capabilities.EnergyStorage.BLOCK, pos, null);
-        if (storage != null && !seen.containsKey(storage)) {
-            seen.put(storage, null);
-            remaining = attemptAddTarget(storage, pos, null, remaining, targets);
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity == null) {
+            return remaining;
         }
 
+        remaining = tryCaptureEnergy(blockEntity.getCapability(ForgeCapabilities.ENERGY, null), pos, null, remaining, targets, seen);
         if (remaining <= 0) {
             return 0;
         }
 
         for (Direction direction : Direction.values()) {
-            storage = level.getCapability(Capabilities.EnergyStorage.BLOCK, pos, direction);
-            if (storage != null && !seen.containsKey(storage)) {
-                seen.put(storage, direction);
-                remaining = attemptAddTarget(storage, pos, direction, remaining, targets);
-                if (remaining <= 0) {
-                    return 0;
-                }
+            remaining = tryCaptureEnergy(blockEntity.getCapability(ForgeCapabilities.ENERGY, direction), pos, direction, remaining, targets, seen);
+            if (remaining <= 0) {
+                return 0;
             }
         }
 
         return remaining;
+    }
+
+    private int tryCaptureEnergy(LazyOptional<IEnergyStorage> optional, BlockPos pos, @Nullable Direction direction,
+                                 int remaining, List<EnergyTarget> targets, Map<IEnergyStorage, Direction> seen) {
+        if (!optional.isPresent()) {
+            return remaining;
+        }
+
+        IEnergyStorage storage = optional.orElseThrow(IllegalStateException::new);
+        if (seen.containsKey(storage)) {
+            return remaining;
+        }
+
+        seen.put(storage, direction);
+        return attemptAddTarget(storage, pos, direction, remaining, targets);
     }
 
     private int attemptAddTarget(IEnergyStorage storage, BlockPos pos, @Nullable Direction direction, int remaining, List<EnergyTarget> targets) {
@@ -154,10 +167,17 @@ public record EnergyRequirement(
 
             List<IEnergyStorage> storages = new ArrayList<>(targets.size());
             for (EnergyTarget target : targets) {
-                IEnergyStorage storage = level.getCapability(Capabilities.EnergyStorage.BLOCK, target.pos, target.direction);
-                if (storage == null) {
+                BlockEntity blockEntity = level.getBlockEntity(target.pos);
+                if (blockEntity == null) {
                     return false;
                 }
+
+                LazyOptional<IEnergyStorage> optional = blockEntity.getCapability(ForgeCapabilities.ENERGY, target.direction);
+                if (!optional.isPresent()) {
+                    return false;
+                }
+
+                IEnergyStorage storage = optional.orElseThrow(IllegalStateException::new);
                 int simulated = storage.extractEnergy(target.amount, true);
                 if (simulated < target.amount) {
                     return false;

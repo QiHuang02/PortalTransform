@@ -4,8 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -15,23 +14,23 @@ public record Height(Optional<Integer> minY, Optional<Integer> maxY) {
     public static final String ERROR_MIN_GREATER_THAN_MAX = "Height minimum cannot be greater than maximum.";
     public static final String ERROR_EMPTY_HEIGHT = "Height condition must specify at least a minimum or maximum value.";
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, Height> STREAM_CODEC = StreamCodec.of(
-            (buf, height) -> {
-                encodeOptionalInt(buf, height.minY());
-                encodeOptionalInt(buf, height.maxY());
-            },
-            buf -> new Height(
-                    decodeOptionalInt(buf),
-                    decodeOptionalInt(buf)
-            )
-    );
+    public void toNetwork(FriendlyByteBuf buf) {
+        encodeOptionalInt(buf, minY);
+        encodeOptionalInt(buf, maxY);
+    }
 
-    private static void encodeOptionalInt(RegistryFriendlyByteBuf buf, Optional<Integer> value) {
+    public static Height fromNetwork(FriendlyByteBuf buf) {
+        Optional<Integer> min = decodeOptionalInt(buf);
+        Optional<Integer> max = decodeOptionalInt(buf);
+        return new Height(min, max);
+    }
+
+    private static void encodeOptionalInt(FriendlyByteBuf buf, Optional<Integer> value) {
         buf.writeBoolean(value.isPresent());
         value.ifPresent(buf::writeVarInt);
     }
 
-    private static Optional<Integer> decodeOptionalInt(RegistryFriendlyByteBuf buf) {
+    private static Optional<Integer> decodeOptionalInt(FriendlyByteBuf buf) {
         return buf.readBoolean() ? Optional.of(buf.readVarInt()) : Optional.empty();
     }
 

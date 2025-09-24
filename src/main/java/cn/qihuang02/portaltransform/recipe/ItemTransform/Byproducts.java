@@ -1,13 +1,14 @@
 package cn.qihuang02.portaltransform.recipe.ItemTransform;
 
+import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.util.GsonHelper;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -18,17 +19,34 @@ public record Byproducts(
         CountRange counts
 ) {
     public static final MapCodec<Byproducts> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            ItemStack.STRICT_CODEC.fieldOf("byproduct").forGetter(Byproducts::byproduct),
+            ItemStack.CODEC.fieldOf("byproduct").forGetter(Byproducts::byproduct),
             Codec.FLOAT.fieldOf("chance").forGetter(Byproducts::chance),
             CountRange.CODEC.fieldOf("counts").forGetter(Byproducts::counts)
     ).apply(instance, Byproducts::new));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, Byproducts> STREAM_CODEC = StreamCodec.composite(
-            ItemStack.STREAM_CODEC, Byproducts::byproduct,
-            ByteBufCodecs.FLOAT, Byproducts::chance,
-            CountRange.STREAM_CODEC, Byproducts::counts,
-            Byproducts::new
-    );
+    public void toNetwork(FriendlyByteBuf buf) {
+        buf.writeItem(byproduct);
+        buf.writeFloat(chance);
+        counts.toNetwork(buf);
+    }
+
+    public static Byproducts fromNetwork(FriendlyByteBuf buf) {
+        ItemStack stack = buf.readItem();
+        float chance = buf.readFloat();
+        CountRange range = CountRange.fromNetwork(buf);
+        return new Byproducts(stack, chance, range);
+    }
+
+    public static Byproducts fromJson(JsonObject json) {
+        ItemStack stack = ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(json, "byproduct"));
+        float chance = GsonHelper.getAsFloat(json, "chance");
+        CountRange range = CountRange.fromJson(GsonHelper.getAsJsonObject(json, "counts"));
+        return new Byproducts(stack, chance, range);
+    }
+
+    public Byproducts copy() {
+        return new Byproducts(byproduct.copy(), chance, counts.copy());
+    }
 
     public Byproducts {
         if (byproduct == null || byproduct.isEmpty()) {

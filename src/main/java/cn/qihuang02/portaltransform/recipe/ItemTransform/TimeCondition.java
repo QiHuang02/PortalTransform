@@ -4,8 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
@@ -19,31 +18,30 @@ public record TimeCondition(Mode mode, Optional<Integer> start, Optional<Integer
     public static final String ERROR_MISSING_RANGE = "Time range must specify both start and end when mode is 'range'.";
     public static final String ERROR_RANGE_OUT_OF_BOUNDS = "Time range must be between 0 and 23999 inclusive.";
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, TimeCondition> STREAM_CODEC = StreamCodec.of(
-            (buf, condition) -> {
-                buf.writeVarInt(condition.mode().ordinal());
-                encodeOptionalInt(buf, condition.start());
-                encodeOptionalInt(buf, condition.end());
-            },
-            buf -> {
-                int index = buf.readVarInt();
-                Mode[] modes = Mode.values();
-                if (index < 0 || index >= modes.length) {
-                    throw new IllegalArgumentException("Invalid time condition mode index: " + index);
-                }
-                Mode mode = modes[index];
-                Optional<Integer> start = decodeOptionalInt(buf);
-                Optional<Integer> end = decodeOptionalInt(buf);
-                return new TimeCondition(mode, start, end);
-            }
-    );
+    public void toNetwork(FriendlyByteBuf buf) {
+        buf.writeVarInt(mode.ordinal());
+        encodeOptionalInt(buf, start);
+        encodeOptionalInt(buf, end);
+    }
 
-    private static void encodeOptionalInt(RegistryFriendlyByteBuf buf, Optional<Integer> value) {
+    public static TimeCondition fromNetwork(FriendlyByteBuf buf) {
+        int index = buf.readVarInt();
+        Mode[] modes = Mode.values();
+        if (index < 0 || index >= modes.length) {
+            throw new IllegalArgumentException("Invalid time condition mode index: " + index);
+        }
+        Mode mode = modes[index];
+        Optional<Integer> start = decodeOptionalInt(buf);
+        Optional<Integer> end = decodeOptionalInt(buf);
+        return new TimeCondition(mode, start, end);
+    }
+
+    private static void encodeOptionalInt(FriendlyByteBuf buf, Optional<Integer> value) {
         buf.writeBoolean(value.isPresent());
         value.ifPresent(buf::writeVarInt);
     }
 
-    private static Optional<Integer> decodeOptionalInt(RegistryFriendlyByteBuf buf) {
+    private static Optional<Integer> decodeOptionalInt(FriendlyByteBuf buf) {
         return buf.readBoolean() ? Optional.of(buf.readVarInt()) : Optional.empty();
     }
 
@@ -145,6 +143,15 @@ public record TimeCondition(Mode mode, Optional<Integer> start, Optional<Integer
         @Override
         public @NotNull String getSerializedName() {
             return this.name;
+        }
+
+        public static Mode fromName(String name) {
+            for (Mode mode : values()) {
+                if (mode.name.equalsIgnoreCase(name)) {
+                    return mode;
+                }
+            }
+            return null;
         }
     }
 }

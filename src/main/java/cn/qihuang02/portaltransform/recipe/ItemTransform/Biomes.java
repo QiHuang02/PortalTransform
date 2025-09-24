@@ -5,10 +5,9 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,11 +21,22 @@ public record Biomes(
     public static final String ERROR_EMPTY_BIOME_LIST = "Biomes list cannot be empty.";
     public static final String ERROR_NULL_BIOME = "Biomes list cannot contain null entries.";
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, Biomes> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.collection(ArrayList::new, ResourceKey.streamCodec(Registries.BIOME)),
-            Biomes::biomes,
-            Biomes::new
-    );
+    public void toNetwork(FriendlyByteBuf buf) {
+        buf.writeVarInt(biomes.size());
+        for (ResourceKey<Biome> biome : biomes) {
+            buf.writeResourceLocation(biome.location());
+        }
+    }
+
+    public static Biomes fromNetwork(FriendlyByteBuf buf) {
+        int size = buf.readVarInt();
+        List<ResourceKey<Biome>> entries = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            ResourceLocation id = buf.readResourceLocation();
+            entries.add(ResourceKey.create(Registries.BIOME, id));
+        }
+        return new Biomes(entries);
+    }
 
     private static final MapCodec<Biomes> BASE_MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             ResourceKey.codec(Registries.BIOME).listOf().fieldOf("biomes").forGetter(Biomes::biomes)

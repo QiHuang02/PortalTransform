@@ -1,23 +1,23 @@
 package cn.qihuang02.portaltransform.config;
 
-import net.neoforged.neoforge.common.ModConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec;
 import org.jetbrains.annotations.NotNull;
 
 public class PTConfig {
-    public static final ModConfigSpec COMMON_SPEC;
+    public static final ForgeConfigSpec COMMON_SPEC;
     public static final CommonConfig COMMON;
 
     static {
-        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
+        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
         COMMON = new CommonConfig(builder);
         COMMON_SPEC = builder.build();
     }
 
     public static class CommonConfig {
-        public final ModConfigSpec.BooleanValue autoInsertIntoChests;
-        public final ModConfigSpec.IntValue chestSearchRadius;
+        public final ForgeConfigSpec.BooleanValue autoInsertIntoChests;
+        public final ForgeConfigSpec.IntValue chestSearchRadius;
 
-        public CommonConfig(ModConfigSpec.@NotNull Builder builder) {
+        public CommonConfig(ForgeConfigSpec.@NotNull Builder builder) {
             builder.push("General");
 
             autoInsertIntoChests = builder

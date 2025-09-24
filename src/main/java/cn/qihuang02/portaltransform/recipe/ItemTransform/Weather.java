@@ -1,9 +1,7 @@
 package cn.qihuang02.portaltransform.recipe.ItemTransform;
 
 import com.mojang.serialization.Codec;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +19,6 @@ public enum Weather implements StringRepresentable {
 
     public static final Codec<Weather> CODEC = StringRepresentable.fromEnum(Weather::values);
     private static final Map<Integer, Weather> ENUM_MAP = Arrays.stream(values()).collect(Collectors.toMap(Enum::ordinal, Function.identity()));
-    public static final StreamCodec<ByteBuf, Weather> STREAM_CODEC = ByteBufCodecs.idMapper(ENUM_MAP::get, Weather::ordinal);
     private final String name;
 
     Weather(String name) {
@@ -40,5 +37,14 @@ public enum Weather implements StringRepresentable {
     @Override
     public @NotNull String getSerializedName() {
         return this.name;
+    }
+
+    public void toNetwork(FriendlyByteBuf buf) {
+        buf.writeVarInt(this.ordinal());
+    }
+
+    public static Weather fromNetwork(FriendlyByteBuf buf) {
+        int index = buf.readVarInt();
+        return ENUM_MAP.getOrDefault(index, ANY);
     }
 }

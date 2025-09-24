@@ -5,9 +5,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,8 +34,9 @@ public class InventoryUtil {
             try {
                 BlockEntity blockEntity = level.getBlockEntity(currentPos);
                 if (blockEntity != null) {
-                    IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, currentPos, null);
-                    if (handler != null) {
+                    LazyOptional<IItemHandler> capability = blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER, null);
+                    if (capability.isPresent()) {
+                        IItemHandler handler = capability.orElseThrow(IllegalStateException::new);
                         remainingStack = ItemHandlerHelper.insertItem(handler, remainingStack, false);
                     }
                 }
