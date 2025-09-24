@@ -21,7 +21,7 @@ minecraft {
 
     runs {
         configureEach {
-            workingDirectory project.file('runs/' + name)
+            workingDirectory project.file('run-1.20/' + name)
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             mods {
