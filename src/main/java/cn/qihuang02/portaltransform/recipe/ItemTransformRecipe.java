@@ -314,7 +314,7 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
             }
             List<ResourceKey<net.minecraft.world.level.biome.Biome>> keys = new ArrayList<>(array.size());
             for (JsonElement element : array) {
-                ResourceLocation id = new ResourceLocation(GsonHelper.convertToString(element, "biome"));
+                ResourceLocation id = parseResourceLocation(element, "biome");
                 keys.add(ResourceKey.create(net.minecraft.core.registries.Registries.BIOME, id));
             }
             return Optional.of(new Biomes(keys));
@@ -353,7 +353,7 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
             JsonArray array = GsonHelper.getAsJsonArray(obj, "blocks");
             List<ResourceKey<net.minecraft.world.level.block.Block>> blocks = new ArrayList<>(array.size());
             for (JsonElement element : array) {
-                ResourceLocation id = new ResourceLocation(GsonHelper.convertToString(element, "block"));
+                ResourceLocation id = parseResourceLocation(element, "block");
                 blocks.add(ResourceKey.create(net.minecraft.core.registries.Registries.BLOCK, id));
             }
             int horizontal = GsonHelper.getAsInt(obj, "horizontal_range", Catalyst.DEFAULT_HORIZONTAL_RANGE);
@@ -381,8 +381,17 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
         }
 
         private static ResourceKey<Level> parseLevel(JsonElement element) {
-            ResourceLocation id = new ResourceLocation(GsonHelper.convertToString(element, "dimension"));
+            ResourceLocation id = parseResourceLocation(element, "dimension");
             return ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, id);
+        }
+
+        private static ResourceLocation parseResourceLocation(JsonElement element, String name) {
+            String value = GsonHelper.convertToString(element, name);
+            ResourceLocation id = ResourceLocation.tryParse(value);
+            if (id == null) {
+                throw new JsonParseException("Invalid " + name + " id: " + value);
+            }
+            return id;
         }
 
         private static <T> void writeOptional(FriendlyByteBuf buf, Optional<T> optional, BiConsumer<FriendlyByteBuf, T> writer) {

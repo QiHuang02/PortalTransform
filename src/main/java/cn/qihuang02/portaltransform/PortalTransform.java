@@ -29,6 +29,10 @@ public class PortalTransform {
 
     @Contract("_ -> new")
     public static @NotNull ResourceLocation getRL(String path) {
-        return new ResourceLocation(PortalTransform.MODID, path);
+        ResourceLocation id = ResourceLocation.tryParse(PortalTransform.MODID + ":" + path);
+        if (id == null) {
+            throw new IllegalArgumentException("Invalid resource location path: " + path);
+        }
+        return id;
     }
 }
