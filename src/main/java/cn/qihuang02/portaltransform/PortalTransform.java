@@ -19,8 +19,8 @@ public class PortalTransform {
     public static final String MODID = "portaltransform";
     public static final Logger LOGGER = LogManager.getLogger();
 
-    public PortalTransform() {
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+    public PortalTransform(FMLJavaModLoadingContext context) {
+        IEventBus modEventBus = context.getModEventBus();
         Components.register(modEventBus);
         Recipes.register(modEventBus);
 
