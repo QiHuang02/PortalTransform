@@ -62,7 +62,8 @@ ServerEvents.recipes(event => {
         ["minecraft:lush_caves"],                    // 生物群系条件 (可选): 入口所在的必需生物群系列表
                                                         // 如果省略此参数，表示无特定生物群系要求。
         { min: -16 },                                 // 高度条件 (可选): 允许的最低 Y 值, 也可以提供 { max: 80 } 或 { min: 0, max: 64 }
-        { mode: "night" },                            // 时间条件 (可选): "any", "day", "night" 或 { mode: "range", start: 13000, end: 23000 }
+        "night",                                     // 时间条件 (可选): 传入关键字字符串 ("day", "night", "noon", "midnight")
+                                                      // 或者使用数组指定范围，例如 [13000, 23000]
         {                                             // 催化剂条件 (可选): 需要在范围内存在的方块/方块列表
             blocks: ["minecraft:beacon"],            // 可以是单个方块 ID 或数组
             horizontal_range: 2,                      // 水平范围 (默认 3)
@@ -107,6 +108,7 @@ ServerEvents.recipes(event => {
         // 6. biomes (Biomes) - 可选, 默认为无要求
         // 7. height (Height) - 可选, 默认为无要求
         // 8. time (TimeCondition) - 可选, 默认为无要求
+        //    使用 `.time("day")`、`.time("night")`、`.time("noon")`、`.time("midnight")` 或 `.time([start, end])`
         // 9. catalyst (Catalyst) - 可选, 默认为无要求 (在范围内检测指定方块)
         // 10. energy (EnergyRequirement) - 可选, 默认为无要求 (检测并消耗能量)
         // 11. item_predicate (ItemPredicate) - 可选, 默认为无要求
@@ -121,3 +123,71 @@ ServerEvents.recipes(event => {
 });
 ```
 
+### 数据包示例：通过 JSON 配方添加物品转换
+
+如果你更喜欢使用数据包而不是 KubeJS，可以在 `data/<命名空间>/recipes/` 中放置一个 JSON 文件来定义传送门物品转换配方。基本操作步骤为：
+
+1. 在你的数据包中创建 `data/<命名空间>/recipes/` 目录。
+2. 在该目录下新建一个 `.json` 文件，并填写符合 `portaltransform:item_transform` 规范的内容。
+3. 通过 `/reload` 或重启世界加载数据包更新。
+
+下面提供一个完整的示例：
+
+```
+data/your_pack/recipes/lapis_to_diamond.json
+```
+
+```jsonc
+{
+  "type": "portaltransform:item_transform",
+  "input": {
+    "item": "minecraft:lapis_lazuli"
+  },
+  "result": {
+    "item": "minecraft:diamond"
+  },
+  "byproducts": [
+    {
+      "item": "minecraft:experience_bottle",
+      "chance": 0.35,
+      "min_count": 1,
+      "max_count": 2
+    }
+  ],
+  "dimensions": {
+    "current": "minecraft:overworld",
+    "target": "minecraft:the_nether"
+  },
+  "weather": "clear",
+  "biomes": ["minecraft:basalt_deltas", "minecraft:soul_sand_valley"],
+  "height": {
+    "min": 10,
+    "max": 80
+  },
+  "time": "midnight", // 使用字符串关键字。若需自定义时间段，改为 [6000, 12000]
+  "catalyst": {
+    "blocks": ["minecraft:crying_obsidian"],
+    "horizontal_range": 2,
+    "vertical_range": 1
+  },
+  "energy": {
+    "amount": 25000,
+    "horizontal_range": 2,
+    "vertical_range": 1
+  },
+  "item_predicate": {
+    "components": {
+      "minecraft:enchantments": {
+        "minecraft:fortune": 1
+      }
+    }
+  },
+  "transform_chance": 0.6
+}
+```
+
+> **提示**
+>
+> * 所有时间条件都需要写成字符串关键字 (`"day"`、`"night"`、`"noon"`、`"midnight"`) 或包含两个整数的数组 (`[start, end]`)。
+> * 如果想表示任意时间，请完全省略 `time` 字段。
+> * 数据包和 KubeJS 使用相同的底层校验逻辑，因此你在 JSON 中填写的值也会受到 0-23999 的时间范围约束。

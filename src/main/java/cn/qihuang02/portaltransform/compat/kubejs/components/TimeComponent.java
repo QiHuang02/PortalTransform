@@ -1,18 +1,17 @@
 package cn.qihuang02.portaltransform.compat.kubejs.components;
 
 import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition.Mode;
 import com.mojang.serialization.Codec;
 import dev.latvian.mods.kubejs.recipe.KubeRecipe;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
 import dev.latvian.mods.rhino.Context;
+import dev.latvian.mods.rhino.NativeArray;
 import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.ScriptableObject;
 import dev.latvian.mods.rhino.Undefined;
 import dev.latvian.mods.rhino.type.TypeInfo;
 
 import java.util.Locale;
-import java.util.Optional;
 
 public class TimeComponent implements RecipeComponent<TimeCondition> {
     public static final TimeComponent TIME = new TimeComponent();
@@ -46,82 +45,47 @@ public class TimeComponent implements RecipeComponent<TimeCondition> {
         }
 
         if (from instanceof CharSequence sequence) {
-            return parseModeString(cx, sequence.toString());
+            return parseKeywordString(cx, sequence.toString());
         }
 
-        if (from instanceof ScriptableObject object) {
-            String modeRaw = extractModeString(cx, object);
-            Mode mode = parseMode(modeRaw, cx);
+        if (from instanceof NativeArray array) {
+            return parseRangeArray(cx, array);
+        }
 
-            Optional<Integer> start = parseOptionalInt(cx, object, "start");
-            Optional<Integer> end = parseOptionalInt(cx, object, "end");
+        throw ScriptRuntime.typeError(cx, "Invalid value for time condition. Expected string keyword or [start, end] array (use .time(\"keyword\") or .time([start, end])). Got " + from.getClass().getSimpleName() + ".");
+    }
 
-            if (mode == Mode.RANGE) {
-                if (start.isEmpty() || end.isEmpty()) {
-                    throw ScriptRuntime.typeError(cx, "Time condition with mode 'range' requires both 'start' and 'end' ticks.");
-                }
+    private TimeCondition parseKeywordString(Context cx, String raw) {
+        String normalized = raw.trim().toLowerCase(Locale.ROOT);
+        return TimeCondition.Keyword.byName(normalized)
+                .map(TimeCondition::keyword)
+                .orElseThrow(() -> ScriptRuntime.typeError(cx, "Unknown time keyword '" + raw + "'. Use .time(\"day\"), .time(\"night\"), .time(\"noon\"), or .time(\"midnight\"), or define a custom range with .time([start, end])."));
+    }
 
-                try {
-                    return new TimeCondition(mode, start, end);
-                } catch (IllegalArgumentException e) {
-                    throw ScriptRuntime.typeError(cx, "Invalid time range: " + e.getMessage());
-                }
+    private TimeCondition parseRangeArray(Context cx, NativeArray array) {
+        long length = array.getLength();
+        if (length != 2) {
+            throw ScriptRuntime.typeError(cx, "Time range must be defined as an array with exactly two elements: .time([start, end]).");
+        }
+
+        int[] bounds = new int[2];
+        for (int i = 0; i < 2; i++) {
+            Object element = array.get(i);
+            if (element == null || element == Undefined.INSTANCE || element == ScriptableObject.NOT_FOUND) {
+                throw ScriptRuntime.typeError(cx, "Time range array cannot contain null or undefined values. Use .time([start, end]).");
             }
 
-            if (start.isPresent() || end.isPresent()) {
-                throw ScriptRuntime.typeError(cx, "Only 'range' time conditions may define 'start' or 'end' values.");
+            if (!(element instanceof Number number)) {
+                throw ScriptRuntime.typeError(cx, "Time range array must contain numbers. Use .time([start, end]).");
             }
 
-            return switch (mode) {
-                case ANY -> TimeCondition.any();
-                case DAY -> TimeCondition.day();
-                case NIGHT -> TimeCondition.night();
-                case RANGE -> throw new IllegalStateException("Range handled earlier");
-            };
+            bounds[i] = (int) Math.floor(number.doubleValue());
         }
 
-        throw ScriptRuntime.typeError(cx, "Invalid value for time condition. Expected string, object, or null but got " + from.getClass().getSimpleName());
-    }
-
-    private TimeCondition parseModeString(Context cx, String raw) {
-        Mode mode = parseMode(raw, cx);
-        return switch (mode) {
-            case ANY -> TimeCondition.any();
-            case DAY -> TimeCondition.day();
-            case NIGHT -> TimeCondition.night();
-            case RANGE -> throw ScriptRuntime.typeError(cx, "String 'range' requires an object with 'start' and 'end' values.");
-        };
-    }
-
-    private String extractModeString(Context cx, ScriptableObject object) {
-        Object rawMode = ScriptableObject.getProperty(object, "mode", cx);
-        if (rawMode == null || rawMode == ScriptableObject.NOT_FOUND || rawMode instanceof Undefined) {
-            return "any";
+        try {
+            return TimeCondition.range(bounds[0], bounds[1]);
+        } catch (IllegalArgumentException e) {
+            throw ScriptRuntime.typeError(cx, "Invalid time range: " + e.getMessage() + " (use .time([start, end])).");
         }
-        return rawMode.toString();
-    }
-
-    private Mode parseMode(String value, Context cx) {
-        String normalized = value.trim().toLowerCase(Locale.ROOT);
-        return switch (normalized) {
-            case "any" -> Mode.ANY;
-            case "day" -> Mode.DAY;
-            case "night" -> Mode.NIGHT;
-            case "range" -> Mode.RANGE;
-            default -> throw ScriptRuntime.typeError(cx, "Unknown time mode '" + value + "'. Expected any, day, night, or range.");
-        };
-    }
-
-    private Optional<Integer> parseOptionalInt(Context cx, ScriptableObject object, String key) {
-        Object value = ScriptableObject.getProperty(object, key, cx);
-        if (value == null || value == ScriptableObject.NOT_FOUND || value instanceof Undefined) {
-            return Optional.empty();
-        }
-
-        if (value instanceof Number number) {
-            return Optional.of((int) Math.floor(number.doubleValue()));
-        }
-
-        throw ScriptRuntime.typeError(cx, "Expected number for time property '" + key + "' but got " + value.getClass().getSimpleName());
     }
 }
