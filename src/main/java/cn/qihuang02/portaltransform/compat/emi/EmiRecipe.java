@@ -27,6 +27,8 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
@@ -40,6 +42,7 @@ import java.util.*;
 
 public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
     private static final ResourceLocation TEXTURE_GUI = PortalTransform.getRL("textures/gui/emi/gui.png");
+    private static final ItemStack CLOCK_STACK = new ItemStack(Items.CLOCK);
 
     private final RecipeHolder<ItemTransformRecipe> recipeHolder;
     private final ItemTransformRecipe recipe;
@@ -110,6 +113,13 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                 185, 125,
                 256, 256
         );
+
+        recipe.getTimeRequirement().ifPresent(timeCondition -> {
+            widgets.addDrawable(15, 25, 16, 16, (graphics, mouseX, mouseY, delta) ->
+                    graphics.renderItem(CLOCK_STACK, 0, 0)
+            );
+            widgets.addTooltipText(getClockTooltipLines(timeCondition), 15, 25, 16, 16);
+        });
 
         recipe.getWeather().ifPresent(weather -> {
             int u = 0;
@@ -213,25 +223,34 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
                 .withStyle(ChatFormatting.AQUA);
     }
 
-    private @NotNull @Unmodifiable List<Component> getTimeTooltipLines() {
-        return recipe.getTimeRequirement()
-                .map(condition -> List.of(createRequirementLine(getTimeComponent(condition))))
-                .orElse(List.of(createRequirementLine(getNoRequirementComponent())));
+    private @NotNull @Unmodifiable List<Component> getClockTooltipLines(@NotNull TimeCondition condition) {
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.translatable("tooltip.portaltransform.item_transform.time").withStyle(ChatFormatting.AQUA));
+        lines.add(createRequirementLine(getTimeComponent(condition)));
+        return List.copyOf(lines);
     }
 
     private @NotNull Component getTimeComponent(@NotNull TimeCondition condition) {
-        return switch (condition.mode()) {
-            case ANY -> Component.translatable("tooltip.portaltransform.item_transform.time.any")
+        if (condition.coversWholeDay()) {
+            return Component.translatable("tooltip.portaltransform.item_transform.time.any")
                     .withStyle(ChatFormatting.GREEN);
-            case DAY -> Component.translatable("tooltip.portaltransform.item_transform.time.day")
-                    .withStyle(ChatFormatting.GOLD);
-            case NIGHT -> Component.translatable("tooltip.portaltransform.item_transform.time.night")
-                    .withStyle(ChatFormatting.BLUE);
-            case RANGE -> Component.translatable("tooltip.portaltransform.item_transform.time.range",
-                    formatTick(condition.start().orElse(0)),
-                    formatTick(condition.end().orElse(0)))
-                    .withStyle(ChatFormatting.AQUA);
-        };
+        }
+
+        return condition.keyword()
+                .map(keyword -> switch (keyword) {
+                    case DAY -> Component.translatable("tooltip.portaltransform.item_transform.time.day")
+                            .withStyle(ChatFormatting.GOLD);
+                    case NIGHT -> Component.translatable("tooltip.portaltransform.item_transform.time.night")
+                            .withStyle(ChatFormatting.BLUE);
+                    case NOON -> Component.translatable("tooltip.portaltransform.item_transform.time.noon")
+                            .withStyle(ChatFormatting.YELLOW);
+                    case MIDNIGHT -> Component.translatable("tooltip.portaltransform.item_transform.time.midnight")
+                            .withStyle(ChatFormatting.DARK_BLUE);
+                })
+                .orElse(Component.translatable("tooltip.portaltransform.item_transform.time.range",
+                                formatTick(condition.startTick()),
+                                formatTick(condition.endTick()))
+                        .withStyle(ChatFormatting.AQUA));
     }
 
     private String formatTick(int tick) {
@@ -275,8 +294,6 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         lines.addAll(getBiomeTooltipLines());
         lines.add(Component.translatable("tooltip.portaltransform.item_transform.height").withStyle(ChatFormatting.GRAY));
         lines.addAll(getHeightTooltipLines());
-        lines.add(Component.translatable("tooltip.portaltransform.item_transform.time").withStyle(ChatFormatting.AQUA));
-        lines.addAll(getTimeTooltipLines());
         lines.add(Component.translatable("tooltip.portaltransform.item_transform.catalyst").withStyle(ChatFormatting.LIGHT_PURPLE));
         lines.addAll(getCatalystTooltipLines());
         lines.add(Component.translatable("tooltip.portaltransform.item_transform.energy").withStyle(ChatFormatting.RED));
