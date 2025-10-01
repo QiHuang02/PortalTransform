@@ -8,7 +8,9 @@ import dev.latvian.mods.rhino.Context;
 import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.Undefined;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 
+@HideFromJS
 public class WeatherComponent implements RecipeComponent<Weather> {
     public static final WeatherComponent WEATHER = new WeatherComponent();
     public static final String COMPONENT_NAME = "portaltransform:weather_condition";

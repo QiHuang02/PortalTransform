@@ -4,6 +4,7 @@ import cn.qihuang02.portaltransform.event.PortalItemTransformedEvent;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement.EnergyPlan;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import dev.latvian.mods.kubejs.level.KubeLevelEvent;
+import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -21,6 +22,7 @@ import java.util.Optional;
 public class PortalItemTransformedKubeEvent implements KubeLevelEvent {
     private final PortalItemTransformedEvent event;
 
+    @HideFromJS
     public PortalItemTransformedKubeEvent(@NotNull PortalItemTransformedEvent event) {
         this.event = event;
     }
@@ -74,6 +76,7 @@ public class PortalItemTransformedKubeEvent implements KubeLevelEvent {
         return event.getEnergyPlan();
     }
 
+    @HideFromJS
     public PortalItemTransformedEvent asNeoEvent() {
         return event;
     }

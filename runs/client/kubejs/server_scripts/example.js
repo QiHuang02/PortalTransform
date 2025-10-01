@@ -18,4 +18,6 @@ ServerEvents.recipes((event) => {
     item_transform("minecraft:dirt", "minecraft:stone")
         .byproducts([Byproduct.of("minecraft:sand", 0.25, 1, 1)])
         .chance(0.5);
+
+    item_transform("minecraft:stone", "minecraft:diamond").time("night").chance(0.01);
 })

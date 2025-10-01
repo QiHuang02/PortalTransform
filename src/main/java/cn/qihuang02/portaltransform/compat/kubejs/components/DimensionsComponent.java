@@ -6,12 +6,14 @@ import dev.latvian.mods.kubejs.recipe.KubeRecipe;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
 import dev.latvian.mods.rhino.*;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@HideFromJS
 public class DimensionsComponent implements RecipeComponent<Dimensions> {
     public static final DimensionsComponent DIMENSIONS = new DimensionsComponent();
 

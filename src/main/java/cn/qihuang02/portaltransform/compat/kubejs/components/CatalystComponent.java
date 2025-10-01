@@ -10,12 +10,14 @@ import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.ScriptableObject;
 import dev.latvian.mods.rhino.Undefined;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@HideFromJS
 public class CatalystComponent implements RecipeComponent<Catalyst> {
     public static final CatalystComponent CATALYST = new CatalystComponent();
 

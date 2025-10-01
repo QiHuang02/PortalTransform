@@ -10,9 +10,11 @@ import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.ScriptableObject;
 import dev.latvian.mods.rhino.Undefined;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 
 import java.util.Locale;
 
+@HideFromJS
 public class TimeComponent implements RecipeComponent<TimeCondition> {
     public static final TimeComponent TIME = new TimeComponent();
 
@@ -34,25 +36,18 @@ public class TimeComponent implements RecipeComponent<TimeCondition> {
         return "portaltransform:time";
     }
 
+
     @Override
     public TimeCondition wrap(Context cx, KubeRecipe recipe, Object from) {
-        if (from == null || from instanceof Undefined) {
-            return null;
-        }
-
-        if (from instanceof TimeCondition condition) {
-            return condition;
-        }
-
-        if (from instanceof CharSequence sequence) {
-            return parseKeywordString(cx, sequence.toString());
-        }
-
-        if (from instanceof NativeArray array) {
-            return parseRangeArray(cx, array);
-        }
-
-        throw ScriptRuntime.typeError(cx, "Invalid value for time condition. Expected string keyword or [start, end] array (use .time(\"keyword\") or .time([start, end])). Got " + from.getClass().getSimpleName() + ".");
+        return switch (from) {
+            case null -> null;
+            case Undefined ignored -> null;
+            case TimeCondition condition -> condition;
+            case CharSequence sequence -> parseKeywordString(cx, sequence.toString());
+            case NativeArray array -> parseRangeArray(cx, array);
+            default ->
+                    throw ScriptRuntime.typeError(cx, "Invalid value for time condition. Expected string keyword or [start, end] array (use .time(\"keyword\") or .time([start, end])). Got " + from.getClass().getSimpleName() + ".");
+        };
     }
 
     private TimeCondition parseKeywordString(Context cx, String raw) {

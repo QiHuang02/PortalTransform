@@ -18,11 +18,13 @@ import dev.latvian.mods.rhino.Scriptable;
 import dev.latvian.mods.rhino.ScriptableObject;
 import dev.latvian.mods.rhino.Undefined;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.advancements.critereon.ItemPredicate;
 
 import java.util.Map;
 import java.util.Optional;
 
+@HideFromJS
 public class ItemPredicateComponent implements RecipeComponent<ItemPredicate> {
     public static final ItemPredicateComponent ITEM_PREDICATE = new ItemPredicateComponent();
 

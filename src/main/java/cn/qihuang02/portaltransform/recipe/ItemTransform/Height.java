@@ -66,9 +66,6 @@ public record Height(Optional<Integer> minY, Optional<Integer> maxY) {
         if (minY.isPresent() && y < minY.get()) {
             return false;
         }
-        if (maxY.isPresent() && y > maxY.get()) {
-            return false;
-        }
-        return true;
+        return maxY.isEmpty() || y <= maxY.get();
     }
 }

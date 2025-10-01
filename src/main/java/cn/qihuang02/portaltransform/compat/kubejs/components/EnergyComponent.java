@@ -9,7 +9,9 @@ import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.ScriptableObject;
 import dev.latvian.mods.rhino.Undefined;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 
+@HideFromJS
 public class EnergyComponent implements RecipeComponent<EnergyRequirement> {
     public static final EnergyComponent ENERGY = new EnergyComponent();
 

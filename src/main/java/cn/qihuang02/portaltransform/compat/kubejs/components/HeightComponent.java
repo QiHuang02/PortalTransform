@@ -9,9 +9,11 @@ import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.ScriptableObject;
 import dev.latvian.mods.rhino.Undefined;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 
 import java.util.Optional;
 
+@HideFromJS
 public class HeightComponent implements RecipeComponent<Height> {
     public static final HeightComponent HEIGHT = new HeightComponent();
 

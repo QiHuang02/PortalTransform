@@ -4,9 +4,11 @@ import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
 import com.mojang.serialization.Codec;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 
 import java.util.List;
 
+@HideFromJS
 public class ByproductsComponent implements RecipeComponent<Byproducts> {
     public static final ByproductsComponent BYPRODUCT = new ByproductsComponent();
     public static final RecipeComponent<List<Byproducts>> LIST = BYPRODUCT.asList();

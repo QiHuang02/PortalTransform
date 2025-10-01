@@ -10,12 +10,14 @@ import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.ScriptableObject;
 import dev.latvian.mods.rhino.Undefined;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@HideFromJS
 public class BiomesComponent implements RecipeComponent<Biomes> {
     public static final BiomesComponent BIOMES = new BiomesComponent();
 

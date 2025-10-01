@@ -7,11 +7,13 @@ import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
 import dev.latvian.mods.rhino.Context;
 import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.type.TypeInfo;
+import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 
+@HideFromJS
 public class BiomeComponent implements RecipeComponent<ResourceKey<Biome>> {
     public static final BiomeComponent BIOME = new BiomeComponent();
     private static final Codec<ResourceKey<Biome>> CODEC = ResourceKey.codec(Registries.BIOME);

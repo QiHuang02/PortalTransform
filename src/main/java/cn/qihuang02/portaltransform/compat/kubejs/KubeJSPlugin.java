@@ -21,8 +21,10 @@ import dev.latvian.mods.kubejs.recipe.schema.RecipeComponentFactoryRegistry;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeFactoryRegistry;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeSchemaRegistry;
 import dev.latvian.mods.kubejs.script.BindingRegistry;
+import dev.latvian.mods.rhino.util.HideFromJS;
 import org.jetbrains.annotations.NotNull;
 
+@HideFromJS
 public class KubeJSPlugin implements dev.latvian.mods.kubejs.plugin.KubeJSPlugin {
 
     @Override
