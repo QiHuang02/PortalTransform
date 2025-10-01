@@ -27,6 +27,8 @@ public class LangProvider extends LanguageProvider {
         this.add("tooltip.portaltransform.item_transform.time.any", "Any time");
         this.add("tooltip.portaltransform.item_transform.time.day", "Daytime");
         this.add("tooltip.portaltransform.item_transform.time.night", "Nighttime");
+        this.add("tooltip.portaltransform.item_transform.time.noon", "High noon");
+        this.add("tooltip.portaltransform.item_transform.time.midnight", "Midnight");
         this.add("tooltip.portaltransform.item_transform.time.range", "Between %s and %s ticks");
         this.add("tooltip.portaltransform.item_transform.catalyst", "Catalyst");
         this.add("tooltip.portaltransform.item_transform.catalyst.range", "Within %s horizontal and %s vertical blocks");
