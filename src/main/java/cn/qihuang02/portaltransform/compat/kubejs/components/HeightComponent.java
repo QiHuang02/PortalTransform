@@ -4,10 +4,7 @@ import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
 import com.mojang.serialization.Codec;
 import dev.latvian.mods.kubejs.recipe.KubeRecipe;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
-import dev.latvian.mods.rhino.Context;
-import dev.latvian.mods.rhino.ScriptRuntime;
-import dev.latvian.mods.rhino.ScriptableObject;
-import dev.latvian.mods.rhino.Undefined;
+import dev.latvian.mods.rhino.*;
 import dev.latvian.mods.rhino.type.TypeInfo;
 import dev.latvian.mods.rhino.util.HideFromJS;
 
@@ -45,39 +42,52 @@ public class HeightComponent implements RecipeComponent<Height> {
             return height;
         }
 
-        if (from instanceof Number number) {
-            int value = (int) Math.floor(number.doubleValue());
-            return new Height(Optional.of(value), Optional.empty());
+        if (from instanceof NativeArray array) {
+            return parseNativeArray(cx, array);
         }
 
-        if (from instanceof ScriptableObject object) {
-            Optional<Integer> min = parseOptionalInt(cx, object, "min");
-            Optional<Integer> max = parseOptionalInt(cx, object, "max");
-
-            if (min.isEmpty() && max.isEmpty()) {
-                throw ScriptRuntime.typeError(cx, "Height condition object must specify at least 'min' or 'max'.");
-            }
-
-            try {
-                return new Height(min, max);
-            } catch (IllegalArgumentException e) {
-                throw ScriptRuntime.typeError(cx, "Invalid height condition: " + e.getMessage());
-            }
+        if (from instanceof ScriptableObject) {
+            throw ScriptRuntime.typeError(cx, "Height condition must be provided as [min, max] when using KubeJS. Use .height([min, max]).");
         }
 
-        throw ScriptRuntime.typeError(cx, "Invalid value for height condition. Expected number, object, or null but got " + from.getClass().getSimpleName());
+        throw ScriptRuntime.typeError(cx, "Invalid value for height condition. Expected array or null but got " + from.getClass().getSimpleName());
     }
 
-    private Optional<Integer> parseOptionalInt(Context cx, ScriptableObject object, String key) {
-        Object value = ScriptableObject.getProperty(object, key, cx);
-        if (value == null || value == ScriptableObject.NOT_FOUND || value instanceof Undefined) {
+    private Height parseNativeArray(Context cx, NativeArray array) {
+        long length = array.getLength();
+        if (length != 2) {
+            throw ScriptRuntime.typeError(cx, "Height range array must contain exactly two elements [min, max].");
+        }
+
+        Optional<Integer> min = Optional.empty();
+        Optional<Integer> max = Optional.empty();
+
+        Object first = array.get(0);
+        min = parseArrayElement(cx, first, "min");
+
+        Object second = array.get(1);
+        max = parseArrayElement(cx, second, "max");
+
+        if (min.isEmpty() && max.isEmpty()) {
+            throw ScriptRuntime.typeError(cx, "Height range array must specify at least one bound. Use null for the unbounded side, e.g. .height([null, max]).");
+        }
+
+        try {
+            return new Height(min, max);
+        } catch (IllegalArgumentException e) {
+            throw ScriptRuntime.typeError(cx, "Invalid height range: " + e.getMessage());
+        }
+    }
+
+    private Optional<Integer> parseArrayElement(Context cx, Object element, String label) {
+        if (element == null || element == ScriptableObject.NOT_FOUND || element instanceof Undefined) {
             return Optional.empty();
         }
 
-        if (value instanceof Number number) {
+        if (element instanceof Number number) {
             return Optional.of((int) Math.floor(number.doubleValue()));
         }
 
-        throw ScriptRuntime.typeError(cx, "Expected number for height property '" + key + "' but got " + value.getClass().getSimpleName());
+        throw ScriptRuntime.typeError(cx, "Height " + label + " must be a number or null, but got " + element.getClass().getSimpleName() + ".");
     }
 }
