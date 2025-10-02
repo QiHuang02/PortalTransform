@@ -23,13 +23,7 @@
   "tooltip.portaltransform.item_transform.height.min": "Y ≥ %s",
   "tooltip.portaltransform.item_transform.height.max": "Y ≤ %s",
   "tooltip.portaltransform.item_transform.height.range": "%s ≤ Y ≤ %s",
-  "tooltip.portaltransform.item_transform.time": "时间",
-  "tooltip.portaltransform.item_transform.time.any": "任意时间",
-  "tooltip.portaltransform.item_transform.time.day": "白天",
-  "tooltip.portaltransform.item_transform.time.night": "夜晚",
-  "tooltip.portaltransform.item_transform.time.noon": "正午",
-  "tooltip.portaltransform.item_transform.time.midnight": "午夜",
-  "tooltip.portaltransform.item_transform.time.range": "介于 %s 到 %s 刻",
+  "tooltip.portaltransform.item_transform.time": "时间: [ %s, %s]",
   "tooltip.portaltransform.item_transform.item_predicate": "物品数据",
   "tooltip.portaltransform.item_transform.item_predicate.value": "条件: %s"
 }

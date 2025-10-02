@@ -225,36 +225,8 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
 
     private @NotNull @Unmodifiable List<Component> getClockTooltipLines(@NotNull TimeCondition condition) {
         List<Component> lines = new ArrayList<>();
-        lines.add(Component.translatable("tooltip.portaltransform.item_transform.time").withStyle(ChatFormatting.AQUA));
-        lines.add(createRequirementLine(getTimeComponent(condition)));
+        lines.add(Component.translatable("tooltip.portaltransform.item_transform.time", condition.startTick(), condition.endTick()).withStyle(ChatFormatting.AQUA));
         return List.copyOf(lines);
-    }
-
-    private @NotNull Component getTimeComponent(@NotNull TimeCondition condition) {
-        if (condition.coversWholeDay()) {
-            return Component.translatable("tooltip.portaltransform.item_transform.time.any")
-                    .withStyle(ChatFormatting.GREEN);
-        }
-
-        return condition.keyword()
-                .map(keyword -> switch (keyword) {
-                    case DAY -> Component.translatable("tooltip.portaltransform.item_transform.time.day")
-                            .withStyle(ChatFormatting.GOLD);
-                    case NIGHT -> Component.translatable("tooltip.portaltransform.item_transform.time.night")
-                            .withStyle(ChatFormatting.BLUE);
-                    case NOON -> Component.translatable("tooltip.portaltransform.item_transform.time.noon")
-                            .withStyle(ChatFormatting.YELLOW);
-                    case MIDNIGHT -> Component.translatable("tooltip.portaltransform.item_transform.time.midnight")
-                            .withStyle(ChatFormatting.DARK_BLUE);
-                })
-                .orElse(Component.translatable("tooltip.portaltransform.item_transform.time.range",
-                                formatTick(condition.startTick()),
-                                formatTick(condition.endTick()))
-                        .withStyle(ChatFormatting.AQUA));
-    }
-
-    private String formatTick(int tick) {
-        return Integer.toString(tick);
     }
 
     private @NotNull @Unmodifiable List<Component> getItemPredicateTooltipLines() {
