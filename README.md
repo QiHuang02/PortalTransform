@@ -107,6 +107,7 @@ ServerEvents.recipes(event => {
         // 5. weather (Weather) - 可选, 默认为 Weather.ANY
         // 6. biomes (Biomes) - 可选, 默认为无要求
         // 7. height (Height) - 可选, 默认为无要求
+        //    使用 `.height([min, max])` 来设置高度范围，可通过 `null` 省略某一端
         // 8. time (TimeCondition) - 可选, 默认为无要求
         //    使用 `.time("day")`、`.time("night")`、`.time("noon")`、`.time("midnight")` 或 `.time([start, end])`
         // 9. catalyst (Catalyst) - 可选, 默认为无要求 (在范围内检测指定方块)
