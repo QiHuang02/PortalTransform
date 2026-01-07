@@ -1,7 +1,6 @@
 package cn.qihuang02.portaltransform.compat.kubejs.event;
 
 import cn.qihuang02.portaltransform.event.PortalItemTransformedEvent;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement.EnergyPlan;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import dev.latvian.mods.kubejs.level.KubeLevelEvent;
 import dev.latvian.mods.rhino.util.HideFromJS;
@@ -14,8 +13,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Optional;
-
 /**
  * Server-side KubeJS event fired after an item successfully transforms inside a portal.
  */
@@ -70,10 +67,6 @@ public class PortalItemTransformedKubeEvent implements KubeLevelEvent {
 
     public ResourceLocation getRecipeId() {
         return event.getRecipeId();
-    }
-
-    public Optional<EnergyPlan> getEnergyPlan() {
-        return event.getEnergyPlan();
     }
 
     @HideFromJS

@@ -3,8 +3,6 @@ package cn.qihuang02.portaltransform.compat.emi;
 import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Catalyst;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
@@ -32,7 +30,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -266,63 +263,9 @@ public class EmiRecipe implements dev.emi.emi.api.recipe.EmiRecipe {
         lines.addAll(getBiomeTooltipLines());
         lines.add(Component.translatable("tooltip.portaltransform.item_transform.height").withStyle(ChatFormatting.GRAY));
         lines.addAll(getHeightTooltipLines());
-        lines.add(Component.translatable("tooltip.portaltransform.item_transform.catalyst").withStyle(ChatFormatting.LIGHT_PURPLE));
-        lines.addAll(getCatalystTooltipLines());
-        lines.add(Component.translatable("tooltip.portaltransform.item_transform.energy").withStyle(ChatFormatting.RED));
-        lines.addAll(getEnergyTooltipLines());
         lines.add(Component.translatable("tooltip.portaltransform.item_transform.item_predicate").withStyle(ChatFormatting.DARK_PURPLE));
         lines.addAll(getItemPredicateTooltipLines());
         return List.copyOf(lines);
-    }
-
-    private @NotNull @Unmodifiable List<Component> getCatalystTooltipLines() {
-        return recipe.getCatalystRequirement()
-                .map(this::createCatalystLines)
-                .orElse(List.of(createRequirementLine(getNoRequirementComponent())));
-    }
-
-    private @NotNull @Unmodifiable List<Component> createCatalystLines(@NotNull Catalyst catalyst) {
-        List<Component> lines = new ArrayList<>();
-        for (ResourceKey<Block> blockKey : catalyst.blocks()) {
-            lines.add(createRequirementLine(getBlockComponent(blockKey)));
-        }
-        lines.add(createRequirementLine(getCatalystRangeComponent(catalyst)));
-        return List.copyOf(lines);
-    }
-
-    private @NotNull Component getBlockComponent(@NotNull ResourceKey<Block> blockKey) {
-        ResourceLocation loc = blockKey.location();
-        String blockLangKey = "block." + loc.getNamespace() + "." + loc.getPath();
-        if (I18n.exists(blockLangKey)) {
-            return Component.translatable(blockLangKey).withStyle(ChatFormatting.YELLOW);
-        }
-        return Component.literal(loc.toString()).withStyle(ChatFormatting.YELLOW);
-    }
-
-    private @NotNull Component getCatalystRangeComponent(@NotNull Catalyst catalyst) {
-        return Component.translatable("tooltip.portaltransform.item_transform.catalyst.range",
-                        catalyst.horizontalRange(), catalyst.verticalRange())
-                .withStyle(ChatFormatting.GRAY);
-    }
-
-    private @NotNull @Unmodifiable List<Component> getEnergyTooltipLines() {
-        return recipe.getEnergyRequirement()
-                .map(requirement -> List.of(
-                        createRequirementLine(getEnergyAmountComponent(requirement)),
-                        createRequirementLine(getEnergyRangeComponent(requirement))
-                ))
-                .orElse(List.of(createRequirementLine(getNoRequirementComponent())));
-    }
-
-    private @NotNull Component getEnergyAmountComponent(@NotNull EnergyRequirement requirement) {
-        return Component.translatable("tooltip.portaltransform.item_transform.energy.amount", requirement.amount())
-                .withStyle(ChatFormatting.GOLD);
-    }
-
-    private @NotNull Component getEnergyRangeComponent(@NotNull EnergyRequirement requirement) {
-        return Component.translatable("tooltip.portaltransform.item_transform.energy.range",
-                        requirement.horizontalRange(), requirement.verticalRange())
-                .withStyle(ChatFormatting.GRAY);
     }
 
     private @NotNull Component getWeatherComponent(@NotNull Optional<Weather> weather) {

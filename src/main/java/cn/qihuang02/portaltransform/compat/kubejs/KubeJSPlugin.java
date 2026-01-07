@@ -4,9 +4,7 @@ import cn.qihuang02.portaltransform.compat.kubejs.binding.ByproductsBinding;
 import cn.qihuang02.portaltransform.compat.kubejs.components.BiomesComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.BlockComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.CatalystComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.DimensionsComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.EnergyComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.HeightComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ItemPredicateComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.LevelComponent;
@@ -17,7 +15,7 @@ import cn.qihuang02.portaltransform.compat.kubejs.recipe.ItemTransformKubeRecipe
 import cn.qihuang02.portaltransform.compat.kubejs.schema.PortalItemTransformRecipeSchema;
 import cn.qihuang02.portaltransform.recipe.Recipes;
 import dev.latvian.mods.kubejs.event.EventGroupRegistry;
-import dev.latvian.mods.kubejs.recipe.schema.RecipeComponentFactoryRegistry;
+import dev.latvian.mods.kubejs.recipe.component.RecipeComponentTypeRegistry;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeFactoryRegistry;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeSchemaRegistry;
 import dev.latvian.mods.kubejs.script.BindingRegistry;
@@ -40,7 +38,7 @@ public class KubeJSPlugin implements dev.latvian.mods.kubejs.plugin.KubeJSPlugin
     }
 
     @Override
-    public void registerRecipeComponents(@NotNull RecipeComponentFactoryRegistry registry) {
+    public void registerRecipeComponents(@NotNull RecipeComponentTypeRegistry registry) {
         registry.register(LevelComponent.DIMENSION);
         registry.register(ByproductsComponent.BYPRODUCT);
         registry.register(BlockComponent.BLOCK);
@@ -50,8 +48,6 @@ public class KubeJSPlugin implements dev.latvian.mods.kubejs.plugin.KubeJSPlugin
         registry.register(HeightComponent.HEIGHT);
         registry.register(TimeComponent.TIME);
         registry.register(ItemPredicateComponent.ITEM_PREDICATE);
-        registry.register(CatalystComponent.CATALYST);
-        registry.register(EnergyComponent.ENERGY);
     }
 
     @Override

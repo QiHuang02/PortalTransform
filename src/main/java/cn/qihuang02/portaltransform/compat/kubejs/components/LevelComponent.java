@@ -2,9 +2,9 @@ package cn.qihuang02.portaltransform.compat.kubejs.components;
 
 import cn.qihuang02.portaltransform.PortalTransform;
 import com.mojang.serialization.Codec;
-import dev.latvian.mods.kubejs.recipe.KubeRecipe;
+import dev.latvian.mods.kubejs.recipe.RecipeScriptContext;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
-import dev.latvian.mods.rhino.Context;
+import dev.latvian.mods.kubejs.recipe.component.RecipeComponentType;
 import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.type.TypeInfo;
 import dev.latvian.mods.rhino.util.HideFromJS;
@@ -15,12 +15,18 @@ import net.minecraft.world.level.Level;
 
 @HideFromJS
 public class LevelComponent implements RecipeComponent<ResourceKey<Level>> {
-    public static final LevelComponent DIMENSION = new LevelComponent();
+    public static final RecipeComponentType<ResourceKey<Level>> DIMENSION = RecipeComponentType.unit(PortalTransform.getRL("dimension"), LevelComponent::new);
 
     private static final Codec<ResourceKey<Level>> CODEC = ResourceKey.codec(Registries.DIMENSION);
-    private static final String COMPONENT_NAME = PortalTransform.MODID + ":dimension";
+    private final RecipeComponentType<?> type;
 
-    public LevelComponent() {
+    private LevelComponent(RecipeComponentType<?> type) {
+        this.type = type;
+    }
+
+    @Override
+    public RecipeComponentType<?> type() {
+        return type;
     }
 
     @Override
@@ -35,16 +41,18 @@ public class LevelComponent implements RecipeComponent<ResourceKey<Level>> {
 
     @Override
     public String toString() {
-        return COMPONENT_NAME;
+        return type.toString();
     }
 
     @Override
-    public ResourceKey<Level> wrap(Context cx, KubeRecipe recipe, Object from) {
+    public ResourceKey<Level> wrap(RecipeScriptContext cx, Object from) {
+        var context = cx.cx();
+
         if (from instanceof ResourceKey<?> key) {
             if (key.isFor(Registries.DIMENSION)) {
                 return (ResourceKey<Level>) key;
             } else {
-                throw ScriptRuntime.typeError(cx, "Expected a ResourceKey for Dimension/Level, but got one for registry: " + key.registry());
+                throw ScriptRuntime.typeError(context, "Expected a ResourceKey for Dimension/Level, but got one for registry: " + key.registry());
             }
         }
 
@@ -58,6 +66,6 @@ public class LevelComponent implements RecipeComponent<ResourceKey<Level>> {
         } catch (Exception ignored) {
 
         }
-        throw ScriptRuntime.typeError(cx, "Expected a ResourceKey, but got " + from);
+        throw ScriptRuntime.typeError(context, "Expected a ResourceKey, but got " + from);
     }
 }

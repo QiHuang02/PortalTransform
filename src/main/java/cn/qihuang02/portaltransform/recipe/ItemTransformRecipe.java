@@ -2,12 +2,10 @@ package cn.qihuang02.portaltransform.recipe;
 
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Catalyst;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Dimensions;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
@@ -41,8 +39,6 @@ public record ItemTransformRecipe(
         Optional<Biomes> biomes,
         Optional<Height> height,
         Optional<TimeCondition> time,
-        Optional<Catalyst> catalyst,
-        Optional<EnergyRequirement> energy,
         Optional<ItemPredicate> itemPredicate,
         float transformChance
 ) implements Recipe<SimpleItemInput> {
@@ -132,14 +128,6 @@ public record ItemTransformRecipe(
         return time;
     }
 
-    public Optional<Catalyst> getCatalystRequirement() {
-        return catalyst;
-    }
-
-    public Optional<EnergyRequirement> getEnergyRequirement() {
-        return energy;
-    }
-
     public Optional<ItemPredicate> getItemDataPredicate() {
         return itemPredicate;
     }
@@ -156,10 +144,6 @@ public record ItemTransformRecipe(
                 ByteBufCodecs.optional(Dimensions.STREAM_CODEC);
         private static final StreamCodec<RegistryFriendlyByteBuf, Optional<Biomes>> OPTIONAL_BIOMES_STREAM_CODEC =
                 ByteBufCodecs.optional(Biomes.STREAM_CODEC);
-        private static final StreamCodec<RegistryFriendlyByteBuf, Optional<Catalyst>> OPTIONAL_CATALYST_STREAM_CODEC =
-                ByteBufCodecs.optional(Catalyst.STREAM_CODEC);
-        private static final StreamCodec<RegistryFriendlyByteBuf, Optional<EnergyRequirement>> OPTIONAL_ENERGY_STREAM_CODEC =
-                ByteBufCodecs.optional(EnergyRequirement.STREAM_CODEC);
         private static final StreamCodec<RegistryFriendlyByteBuf, ItemPredicate> ITEM_PREDICATE_STREAM_CODEC =
                 ByteBufCodecs.fromCodecWithRegistries(ItemPredicate.CODEC);
 
@@ -175,8 +159,6 @@ public record ItemTransformRecipe(
             OPTIONAL_BIOMES_STREAM_CODEC.encode(buf, recipe.biomes());
             encodeOptionalHeight(buf, recipe.height());
             encodeOptionalTime(buf, recipe.time());
-            OPTIONAL_CATALYST_STREAM_CODEC.encode(buf, recipe.catalyst());
-            OPTIONAL_ENERGY_STREAM_CODEC.encode(buf, recipe.energy());
             encodeOptionalItemPredicate(buf, recipe.itemPredicate());
             ByteBufCodecs.FLOAT.encode(buf, recipe.transformChance());
         }
@@ -190,11 +172,9 @@ public record ItemTransformRecipe(
             Optional<Biomes> biomes = OPTIONAL_BIOMES_STREAM_CODEC.decode(buf);
             Optional<Height> height = decodeOptionalHeight(buf);
             Optional<TimeCondition> time = decodeOptionalTime(buf);
-            Optional<Catalyst> catalyst = OPTIONAL_CATALYST_STREAM_CODEC.decode(buf);
-            Optional<EnergyRequirement> energy = OPTIONAL_ENERGY_STREAM_CODEC.decode(buf);
             Optional<ItemPredicate> predicate = decodeOptionalItemPredicate(buf);
             float chance = ByteBufCodecs.FLOAT.decode(buf);
-            return new ItemTransformRecipe(input, result, byproducts, dimensions, weather, biomes, height, time, catalyst, energy, predicate, chance);
+            return new ItemTransformRecipe(input, result, byproducts, dimensions, weather, biomes, height, time, predicate, chance);
         }
 
         private static void encodeOptionalHeight(RegistryFriendlyByteBuf buf, Optional<Height> height) {
@@ -255,8 +235,6 @@ public record ItemTransformRecipe(
                         Biomes.CODEC.optionalFieldOf("biomes").forGetter(ItemTransformRecipe::biomes),
                         Height.CODEC.optionalFieldOf("height").forGetter(ItemTransformRecipe::height),
                         TimeCondition.CODEC.optionalFieldOf("time").forGetter(ItemTransformRecipe::time),
-                        Catalyst.CODEC.optionalFieldOf("catalyst").forGetter(ItemTransformRecipe::catalyst),
-                        EnergyRequirement.CODEC.optionalFieldOf("energy").forGetter(ItemTransformRecipe::energy),
                         ItemPredicate.CODEC.optionalFieldOf("item_predicate").forGetter(ItemTransformRecipe::itemPredicate),
                         Codec.floatRange(0.0F, 1.0F).optionalFieldOf("transform_chance", 1.0F).forGetter(ItemTransformRecipe::transformChance)
                 ).apply(instance, ItemTransformRecipe::new)

@@ -2,9 +2,7 @@ package cn.qihuang02.portaltransform.compat.kubejs.schema;
 
 import cn.qihuang02.portaltransform.compat.kubejs.components.BiomesComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ByproductsComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.CatalystComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.DimensionsComponent;
-import cn.qihuang02.portaltransform.compat.kubejs.components.EnergyComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.HeightComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.ItemPredicateComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.components.TimeComponent;
@@ -12,10 +10,8 @@ import cn.qihuang02.portaltransform.compat.kubejs.components.WeatherComponent;
 import cn.qihuang02.portaltransform.compat.kubejs.recipe.ItemTransformKubeRecipe;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Catalyst;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Dimensions;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import dev.latvian.mods.kubejs.recipe.RecipeKey;
@@ -53,12 +49,6 @@ public interface PortalItemTransformRecipeSchema {
     RecipeKey<ItemPredicate> ITEM_PREDICATE = ItemPredicateComponent.ITEM_PREDICATE
             .otherKey("item_predicate").defaultOptional().functionNames(List.of("item_predicate", "itemPredicate", "itemData"));
 
-    RecipeKey<Catalyst> CATALYST = CatalystComponent.CATALYST
-            .otherKey("catalyst").defaultOptional().functionNames(List.of("catalyst", "catalysts"));
-
-    RecipeKey<EnergyRequirement> ENERGY = EnergyComponent.ENERGY
-            .otherKey("energy").defaultOptional().functionNames(List.of("energy", "power", "mana"));
-
     RecipeKey<List<Byproducts>> BYPRODUCTS = ByproductsComponent.LIST
             .otherKey("byproducts").defaultOptional().functionNames(List.of("byproducts"));
 
@@ -74,8 +64,6 @@ public interface PortalItemTransformRecipeSchema {
             BIOMES,
             HEIGHT,
             TIME,
-            CATALYST,
-            ENERGY,
             ITEM_PREDICATE,
             TRANSFORM_CHANCE
     ).factory(ItemTransformKubeRecipe.FACTORY);

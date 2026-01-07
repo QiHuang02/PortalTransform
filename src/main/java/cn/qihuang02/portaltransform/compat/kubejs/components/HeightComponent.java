@@ -1,9 +1,11 @@
 package cn.qihuang02.portaltransform.compat.kubejs.components;
 
+import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
 import com.mojang.serialization.Codec;
-import dev.latvian.mods.kubejs.recipe.KubeRecipe;
+import dev.latvian.mods.kubejs.recipe.RecipeScriptContext;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
+import dev.latvian.mods.kubejs.recipe.component.RecipeComponentType;
 import dev.latvian.mods.rhino.*;
 import dev.latvian.mods.rhino.type.TypeInfo;
 import dev.latvian.mods.rhino.util.HideFromJS;
@@ -12,9 +14,17 @@ import java.util.Optional;
 
 @HideFromJS
 public class HeightComponent implements RecipeComponent<Height> {
-    public static final HeightComponent HEIGHT = new HeightComponent();
+    public static final RecipeComponentType<Height> HEIGHT = RecipeComponentType.unit(PortalTransform.getRL("height"), HeightComponent::new);
 
-    private HeightComponent() {
+    private final RecipeComponentType<?> type;
+
+    private HeightComponent(RecipeComponentType<?> type) {
+        this.type = type;
+    }
+
+    @Override
+    public RecipeComponentType<?> type() {
+        return type;
     }
 
     @Override
@@ -29,11 +39,13 @@ public class HeightComponent implements RecipeComponent<Height> {
 
     @Override
     public String toString() {
-        return "portaltransform:height";
+        return type.toString();
     }
 
     @Override
-    public Height wrap(Context cx, KubeRecipe recipe, Object from) {
+    public Height wrap(RecipeScriptContext cx, Object from) {
+        var context = cx.cx();
+
         if (from == null || from instanceof Undefined) {
             return null;
         }
@@ -47,16 +59,18 @@ public class HeightComponent implements RecipeComponent<Height> {
         }
 
         if (from instanceof ScriptableObject) {
-            throw ScriptRuntime.typeError(cx, "Height condition must be provided as [min, max] when using KubeJS. Use .height([min, max]).");
+            throw ScriptRuntime.typeError(context, "Height condition must be provided as [min, max] when using KubeJS. Use .height([min, max]).");
         }
 
-        throw ScriptRuntime.typeError(cx, "Invalid value for height condition. Expected array or null but got " + from.getClass().getSimpleName());
+        throw ScriptRuntime.typeError(context, "Invalid value for height condition. Expected array or null but got " + from.getClass().getSimpleName());
     }
 
-    private Height parseNativeArray(Context cx, NativeArray array) {
+    private Height parseNativeArray(RecipeScriptContext cx, NativeArray array) {
+        var context = cx.cx();
+
         long length = array.getLength();
         if (length != 2) {
-            throw ScriptRuntime.typeError(cx, "Height range array must contain exactly two elements [min, max].");
+            throw ScriptRuntime.typeError(context, "Height range array must contain exactly two elements [min, max].");
         }
 
         Optional<Integer> min = Optional.empty();
@@ -69,17 +83,17 @@ public class HeightComponent implements RecipeComponent<Height> {
         max = parseArrayElement(cx, second, "max");
 
         if (min.isEmpty() && max.isEmpty()) {
-            throw ScriptRuntime.typeError(cx, "Height range array must specify at least one bound. Use null for the unbounded side, e.g. .height([null, max]).");
+            throw ScriptRuntime.typeError(context, "Height range array must specify at least one bound. Use null for the unbounded side, e.g. .height([null, max]).");
         }
 
         try {
             return new Height(min, max);
         } catch (IllegalArgumentException e) {
-            throw ScriptRuntime.typeError(cx, "Invalid height range: " + e.getMessage());
+            throw ScriptRuntime.typeError(context, "Invalid height range: " + e.getMessage());
         }
     }
 
-    private Optional<Integer> parseArrayElement(Context cx, Object element, String label) {
+    private Optional<Integer> parseArrayElement(RecipeScriptContext cx, Object element, String label) {
         if (element == null || element == ScriptableObject.NOT_FOUND || element instanceof Undefined) {
             return Optional.empty();
         }
@@ -88,6 +102,6 @@ public class HeightComponent implements RecipeComponent<Height> {
             return Optional.of((int) Math.floor(number.doubleValue()));
         }
 
-        throw ScriptRuntime.typeError(cx, "Height " + label + " must be a number or null, but got " + element.getClass().getSimpleName() + ".");
+        throw ScriptRuntime.typeError(cx.cx(), "Height " + label + " must be a number or null, but got " + element.getClass().getSimpleName() + ".");
     }
 }

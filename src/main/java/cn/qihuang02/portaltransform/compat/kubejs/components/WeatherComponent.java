@@ -1,10 +1,11 @@
 package cn.qihuang02.portaltransform.compat.kubejs.components;
 
+import cn.qihuang02.portaltransform.PortalTransform;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
 import com.mojang.serialization.Codec;
-import dev.latvian.mods.kubejs.recipe.KubeRecipe;
+import dev.latvian.mods.kubejs.recipe.RecipeScriptContext;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
-import dev.latvian.mods.rhino.Context;
+import dev.latvian.mods.kubejs.recipe.component.RecipeComponentType;
 import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.Undefined;
 import dev.latvian.mods.rhino.type.TypeInfo;
@@ -12,8 +13,19 @@ import dev.latvian.mods.rhino.util.HideFromJS;
 
 @HideFromJS
 public class WeatherComponent implements RecipeComponent<Weather> {
-    public static final WeatherComponent WEATHER = new WeatherComponent();
+    public static final RecipeComponentType<Weather> WEATHER = RecipeComponentType.unit(PortalTransform.getRL("weather_condition"), WeatherComponent::new);
     public static final String COMPONENT_NAME = "portaltransform:weather_condition";
+
+    private final RecipeComponentType<?> type;
+
+    private WeatherComponent(RecipeComponentType<?> type) {
+        this.type = type;
+    }
+
+    @Override
+    public RecipeComponentType<?> type() {
+        return type;
+    }
 
     @Override
     public Codec<Weather> codec() {
@@ -27,11 +39,13 @@ public class WeatherComponent implements RecipeComponent<Weather> {
 
     @Override
     public String toString() {
-        return COMPONENT_NAME;
+        return type.toString();
     }
 
     @Override
-    public Weather wrap(Context cx, KubeRecipe recipe, Object from) {
+    public Weather wrap(RecipeScriptContext cx, Object from) {
+        var context = cx.cx();
+
         switch (from) {
             case null -> {
                 return null;
@@ -47,12 +61,12 @@ public class WeatherComponent implements RecipeComponent<Weather> {
                 if (weather != null) {
                     return weather;
                 } else {
-                    throw ScriptRuntime.typeError(cx, "Invalid weather condition string: '" + s + "'. Must be one of: any, clear, rain, thunder.");
+                    throw ScriptRuntime.typeError(context, "Invalid weather condition string: '" + s + "'. Must be one of: any, clear, rain, thunder.");
                 }
             }
             default -> {
             }
         }
-        throw ScriptRuntime.typeError(cx, "Expected a conditions object, null, or undefined for 'conditions' field, but got " + from);
+        throw ScriptRuntime.typeError(context, "Expected a conditions object, null, or undefined for 'conditions' field, but got " + from);
     }
 }

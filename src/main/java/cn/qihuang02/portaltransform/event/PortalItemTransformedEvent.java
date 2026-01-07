@@ -1,7 +1,5 @@
 package cn.qihuang02.portaltransform.event;
 
-import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement.EnergyPlan;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement.EnergyTarget;
 import cn.qihuang02.portaltransform.recipe.ItemTransformRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -16,8 +14,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-
 /**
  * Fired when an {@link ItemEntity} successfully transforms via a portal item transform recipe.
  */
@@ -32,7 +28,6 @@ public class PortalItemTransformedEvent extends Event {
     private final List<ItemStack> byproducts;
     private final ItemTransformRecipe recipe;
     private final ResourceLocation recipeId;
-    private final Optional<EnergyPlan> energyPlan;
 
     public PortalItemTransformedEvent(@NotNull ServerLevel level,
                                       @NotNull ResourceKey<Level> targetDimension,
@@ -43,8 +38,7 @@ public class PortalItemTransformedEvent extends Event {
                                       @NotNull ItemStack remainingStack,
                                       @NotNull List<ItemStack> byproducts,
                                       @NotNull ItemTransformRecipe recipe,
-                                      @NotNull ResourceLocation recipeId,
-                                      @NotNull Optional<EnergyPlan> energyPlan) {
+                                      @NotNull ResourceLocation recipeId) {
         this.level = Objects.requireNonNull(level, "level");
         this.targetDimension = Objects.requireNonNull(targetDimension, "targetDimension");
         this.itemEntity = Objects.requireNonNull(itemEntity, "itemEntity");
@@ -55,7 +49,6 @@ public class PortalItemTransformedEvent extends Event {
         this.byproducts = List.copyOf(byproducts.stream().map(ItemStack::copy).toList());
         this.recipe = Objects.requireNonNull(recipe, "recipe");
         this.recipeId = Objects.requireNonNull(recipeId, "recipeId");
-        this.energyPlan = copyEnergyPlan(Objects.requireNonNull(energyPlan, "energyPlan"));
     }
 
     public ServerLevel getLevel() {
@@ -108,17 +101,5 @@ public class PortalItemTransformedEvent extends Event {
 
     public ResourceLocation getRecipeId() {
         return recipeId;
-    }
-
-    public Optional<EnergyPlan> getEnergyPlan() {
-        return copyEnergyPlan(energyPlan);
-    }
-
-    private static Optional<EnergyPlan> copyEnergyPlan(Optional<EnergyPlan> plan) {
-        return plan.map(original -> new EnergyPlan(
-                original.targets().stream()
-                        .map(target -> new EnergyTarget(target.pos(), target.direction(), target.amount()))
-                        .toList()
-        ));
     }
 }

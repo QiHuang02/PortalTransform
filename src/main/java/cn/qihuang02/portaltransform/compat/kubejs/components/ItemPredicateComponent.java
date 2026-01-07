@@ -1,5 +1,6 @@
 package cn.qihuang02.portaltransform.compat.kubejs.components;
 
+import cn.qihuang02.portaltransform.PortalTransform;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -9,9 +10,9 @@ import com.google.gson.JsonPrimitive;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
-import dev.latvian.mods.kubejs.recipe.KubeRecipe;
+import dev.latvian.mods.kubejs.recipe.RecipeScriptContext;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
-import dev.latvian.mods.rhino.Context;
+import dev.latvian.mods.kubejs.recipe.component.RecipeComponentType;
 import dev.latvian.mods.rhino.NativeArray;
 import dev.latvian.mods.rhino.ScriptRuntime;
 import dev.latvian.mods.rhino.Scriptable;
@@ -26,9 +27,17 @@ import java.util.Optional;
 
 @HideFromJS
 public class ItemPredicateComponent implements RecipeComponent<ItemPredicate> {
-    public static final ItemPredicateComponent ITEM_PREDICATE = new ItemPredicateComponent();
+    public static final RecipeComponentType<ItemPredicate> ITEM_PREDICATE = RecipeComponentType.unit(PortalTransform.getRL("item_predicate"), ItemPredicateComponent::new);
 
-    private ItemPredicateComponent() {
+    private final RecipeComponentType<?> type;
+
+    private ItemPredicateComponent(RecipeComponentType<?> type) {
+        this.type = type;
+    }
+
+    @Override
+    public RecipeComponentType<?> type() {
+        return type;
     }
 
     @Override
@@ -43,11 +52,13 @@ public class ItemPredicateComponent implements RecipeComponent<ItemPredicate> {
 
     @Override
     public String toString() {
-        return "portaltransform:item_predicate";
+        return type.toString();
     }
 
     @Override
-    public ItemPredicate wrap(Context cx, KubeRecipe recipe, Object from) {
+    public ItemPredicate wrap(RecipeScriptContext cx, Object from) {
+        var context = cx.cx();
+
         if (from == null || from instanceof Undefined) {
             return null;
         }
@@ -66,10 +77,10 @@ public class ItemPredicateComponent implements RecipeComponent<ItemPredicate> {
             return parsePredicate(cx, element);
         }
 
-        throw ScriptRuntime.typeError(cx, "Invalid value for item predicate condition. Expected string, object, or null but got " + from.getClass().getSimpleName());
+        throw ScriptRuntime.typeError(context, "Invalid value for item predicate condition. Expected string, object, or null but got " + from.getClass().getSimpleName());
     }
 
-    private ItemPredicate parsePredicate(Context cx, JsonElement element) {
+    private ItemPredicate parsePredicate(RecipeScriptContext cx, JsonElement element) {
         DataResult<ItemPredicate> result = ItemPredicate.CODEC.parse(JsonOps.INSTANCE, element);
         Optional<ItemPredicate> parsed = result.result();
         if (parsed.isPresent()) {
@@ -77,17 +88,17 @@ public class ItemPredicateComponent implements RecipeComponent<ItemPredicate> {
         }
 
         String error = result.error().map(DataResult.Error::message).orElse("unknown error");
-        throw ScriptRuntime.typeError(cx, "Failed to parse item predicate: " + error);
+        throw ScriptRuntime.typeError(cx.cx(), "Failed to parse item predicate: " + error);
     }
 
-    private JsonElement toJsonElement(Context cx, Object value) {
+    private JsonElement toJsonElement(RecipeScriptContext cx, Object value) {
         if (value == null || value == ScriptableObject.NOT_FOUND || value instanceof Undefined) {
             return JsonNull.INSTANCE;
         }
 
         if (value instanceof ItemPredicate predicate) {
             DataResult<JsonElement> encoded = ItemPredicate.CODEC.encodeStart(JsonOps.INSTANCE, predicate);
-            return encoded.result().orElseThrow(() -> ScriptRuntime.typeError(cx, "Failed to serialize nested item predicate: " + encoded.error().map(DataResult.Error::message).orElse("unknown error")));
+            return encoded.result().orElseThrow(() -> ScriptRuntime.typeError(cx.cx(), "Failed to serialize nested item predicate: " + encoded.error().map(DataResult.Error::message).orElse("unknown error")));
         }
 
         if (value instanceof CharSequence sequence) {
@@ -112,9 +123,9 @@ public class ItemPredicateComponent implements RecipeComponent<ItemPredicate> {
 
         if (value instanceof ScriptableObject object) {
             JsonObject jsonObject = new JsonObject();
-            for (Object id : object.getIds(cx)) {
+            for (Object id : object.getIds(cx.cx())) {
                 String key = id.toString();
-                Object property = ScriptableObject.getProperty(object, key, cx);
+                Object property = ScriptableObject.getProperty(object, key, cx.cx());
                 jsonObject.add(key, toJsonElement(cx, property));
             }
             return jsonObject;
@@ -132,6 +143,6 @@ public class ItemPredicateComponent implements RecipeComponent<ItemPredicate> {
             return jsonObject;
         }
 
-        throw ScriptRuntime.typeError(cx, "Unsupported value type in item predicate JSON conversion: " + value.getClass().getSimpleName());
+        throw ScriptRuntime.typeError(cx.cx(), "Unsupported value type in item predicate JSON conversion: " + value.getClass().getSimpleName());
     }
 }
