@@ -12,6 +12,7 @@ public class LangProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
 
+        this.add("jei.category.portaltransform.item_transform", "Portal Item Transform");
         this.add("emi.category.portaltransform.item_transform", "Item Transform");
 
         this.add("tooltip.portaltransform.item_transform.no_requirement", "No requirement");
