@@ -12,8 +12,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.List;
 
 public final class ByproductsBinding {
-    private ByproductsBinding() {
-    }
 
     @Contract("null -> fail")
     @Info(params = {

@@ -16,9 +16,6 @@ public class ItemPredicateComponent implements RecipeComponent<ItemPredicate> {
     public static final String TYPE_ID = "portaltransform:item_predicate";
     public static final ItemPredicateComponent INSTANCE = new ItemPredicateComponent();
 
-    private ItemPredicateComponent() {
-    }
-
     @Override
     public String componentType() {
         return TYPE_ID;

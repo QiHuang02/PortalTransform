@@ -8,9 +8,6 @@ import net.minecraft.world.level.Level;
 
 @HideFromJS
 public final class LevelComponent {
-    private LevelComponent() {
-    }
-
     @SuppressWarnings("unchecked")
     public static ResourceKey<Level> parse(Object from) {
         if (from instanceof ResourceKey<?> key) {

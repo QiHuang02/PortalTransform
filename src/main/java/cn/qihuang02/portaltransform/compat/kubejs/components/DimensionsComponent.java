@@ -23,9 +23,6 @@ public class DimensionsComponent implements RecipeComponent<Dimensions> {
     public static final String TYPE_ID = "portaltransform:dimensions";
     public static final DimensionsComponent INSTANCE = new DimensionsComponent();
 
-    private DimensionsComponent() {
-    }
-
     @Override
     public String componentType() {
         return TYPE_ID;

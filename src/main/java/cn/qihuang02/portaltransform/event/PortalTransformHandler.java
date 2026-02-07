@@ -63,8 +63,9 @@ public class PortalTransformHandler {
 
     // --- Item Transformation Logic ---
     private static void handleItemTransformation(EntityTravelToDimensionEvent event, ItemEntity itemEntity, ServerLevel serverLevel) {
-        if (hasNoPortalTransformComponent(itemEntity) || itemEntity.getItem().isEmpty()) {
-            if (hasNoPortalTransformComponent(itemEntity)) event.setCanceled(true);
+        boolean noPortalTransform = hasNoPortalTransformComponent(itemEntity);
+        if (noPortalTransform || itemEntity.getItem().isEmpty()) {
+            if (noPortalTransform) event.setCanceled(true);
             return;
         }
 

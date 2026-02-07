@@ -8,6 +8,4 @@ import dev.latvian.mods.rhino.util.HideFromJS;
  */
 @HideFromJS
 public final class ItemTransformKubeRecipe {
-    private ItemTransformKubeRecipe() {
-    }
 }

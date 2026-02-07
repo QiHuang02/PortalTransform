@@ -20,9 +20,6 @@ public class TimeComponent implements RecipeComponent<TimeCondition> {
     public static final String TYPE_ID = "portaltransform:time";
     public static final TimeComponent INSTANCE = new TimeComponent();
 
-    private TimeComponent() {
-    }
-
     @Override
     public String componentType() {
         return TYPE_ID;

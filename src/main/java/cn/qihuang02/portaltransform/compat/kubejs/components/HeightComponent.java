@@ -18,9 +18,6 @@ public class HeightComponent implements RecipeComponent<Height> {
     public static final String TYPE_ID = "portaltransform:height";
     public static final HeightComponent INSTANCE = new HeightComponent();
 
-    private HeightComponent() {
-    }
-
     @Override
     public String componentType() {
         return TYPE_ID;

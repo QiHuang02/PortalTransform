@@ -8,8 +8,6 @@ import net.minecraft.world.level.biome.Biome;
 
 @HideFromJS
 public final class BiomeComponent {
-    private BiomeComponent() {
-    }
 
     @SuppressWarnings("unchecked")
     public static ResourceKey<Biome> parse(Object from) {

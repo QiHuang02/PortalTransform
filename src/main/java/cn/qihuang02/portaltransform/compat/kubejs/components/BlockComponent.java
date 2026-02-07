@@ -8,9 +8,6 @@ import net.minecraft.world.level.block.Block;
 
 @HideFromJS
 public final class BlockComponent {
-    private BlockComponent() {
-    }
-
     @SuppressWarnings("unchecked")
     public static ResourceKey<Block> parse(Object from) {
         if (from instanceof ResourceKey<?> key) {

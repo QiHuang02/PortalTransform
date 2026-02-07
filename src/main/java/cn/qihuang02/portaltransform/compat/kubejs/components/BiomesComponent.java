@@ -22,9 +22,6 @@ public class BiomesComponent implements RecipeComponent<Biomes> {
     public static final String TYPE_ID = "portaltransform:biomes";
     public static final BiomesComponent INSTANCE = new BiomesComponent();
 
-    private BiomesComponent() {
-    }
-
     @Override
     public String componentType() {
         return TYPE_ID;

@@ -16,9 +16,6 @@ public class WeatherComponent implements RecipeComponent<Weather> {
     public static final String TYPE_ID = "portaltransform:weather_condition";
     public static final WeatherComponent INSTANCE = new WeatherComponent();
 
-    private WeatherComponent() {
-    }
-
     @Override
     public String componentType() {
         return TYPE_ID;

@@ -21,9 +21,6 @@ public class ByproductsComponent implements RecipeComponent<Byproducts> {
     public static final ByproductsComponent INSTANCE = new ByproductsComponent();
     public static final RecipeComponent<Byproducts[]> ARRAY = INSTANCE.asArray();
 
-    private ByproductsComponent() {
-    }
-
     @Override
     public String componentType() {
         return TYPE_ID;
