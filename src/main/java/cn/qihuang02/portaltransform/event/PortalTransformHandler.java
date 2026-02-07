@@ -10,6 +10,7 @@ import cn.qihuang02.portaltransform.recipe.Recipes;
 import cn.qihuang02.portaltransform.util.InventoryUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -17,6 +18,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
@@ -29,6 +31,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.ModList;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.ArrayList;
@@ -279,20 +282,14 @@ public class PortalTransformHandler {
             return Collections.emptyList();
         }
 
-        HashMap<ItemStack, Integer> byproductCounts = new HashMap<>();
+        HashMap<ByproductKey, Integer> byproductCounts = new HashMap<>();
+        HashMap<ByproductKey, ItemStack> byproductTemplates = new HashMap<>();
         for (Byproducts definition : byproductsOpt.get()) {
             for (int i = 0; i < transformedCount; i++) {
                 definition.getResult(random).ifPresent(byproductStack -> {
-                    ItemStack existingKey = byproductCounts.keySet().stream()
-                            .filter(stack -> ItemStack.isSameItemSameTags(stack, byproductStack))
-                            .findFirst()
-                            .orElse(null);
-
-                    if (existingKey != null) {
-                        byproductCounts.put(existingKey, byproductCounts.get(existingKey) + byproductStack.getCount());
-                    } else {
-                        byproductCounts.put(byproductStack.copy(), byproductStack.getCount());
-                    }
+                    ByproductKey key = ByproductKey.fromStack(byproductStack);
+                    byproductCounts.merge(key, byproductStack.getCount(), Integer::sum);
+                    byproductTemplates.computeIfAbsent(key, ignored -> byproductStack.copyWithCount(1));
                 });
             }
         }
@@ -302,8 +299,12 @@ public class PortalTransformHandler {
         }
 
         List<ItemStack> producedStacks = new ArrayList<>(byproductCounts.size());
-        byproductCounts.forEach((stack, totalCount) -> {
-            ItemStack spawnStack = stack.copyWithCount(totalCount);
+        byproductCounts.forEach((key, totalCount) -> {
+            ItemStack template = byproductTemplates.get(key);
+            if (template == null || template.isEmpty()) {
+                return;
+            }
+            ItemStack spawnStack = template.copyWithCount(totalCount);
             spawnItemByproduct(level, pos, motion, spawnStack, random);
             producedStacks.add(spawnStack.copy());
         });
@@ -347,5 +348,12 @@ public class PortalTransformHandler {
     }
 
     private record RecipeMatch(RecipeResult recipeResult) {
+    }
+
+    private record ByproductKey(Item item, @Nullable CompoundTag tag) {
+        static ByproductKey fromStack(@NotNull ItemStack stack) {
+            CompoundTag copiedTag = stack.getTag();
+            return new ByproductKey(stack.getItem(), copiedTag == null ? null : copiedTag.copy());
+        }
     }
 }
