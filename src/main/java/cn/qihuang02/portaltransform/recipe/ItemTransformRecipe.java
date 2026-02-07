@@ -2,9 +2,7 @@ package cn.qihuang02.portaltransform.recipe;
 
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Biomes;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Byproducts;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.Catalyst;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Dimensions;
-import cn.qihuang02.portaltransform.recipe.ItemTransform.EnergyRequirement;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Height;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.TimeCondition;
 import cn.qihuang02.portaltransform.recipe.ItemTransform.Weather;
@@ -33,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -52,8 +51,6 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
     private final Optional<Biomes> biomes;
     private final Optional<Height> height;
     private final Optional<TimeCondition> time;
-    private final Optional<Catalyst> catalyst;
-    private final Optional<EnergyRequirement> energy;
     private final Optional<ItemPredicate> itemPredicate;
     private final float transformChance;
 
@@ -66,8 +63,6 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
                                Optional<Biomes> biomes,
                                Optional<Height> height,
                                Optional<TimeCondition> time,
-                               Optional<Catalyst> catalyst,
-                               Optional<EnergyRequirement> energy,
                                Optional<ItemPredicate> itemPredicate,
                                float transformChance) {
         this.id = id;
@@ -79,8 +74,6 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
         this.biomes = biomes;
         this.height = height;
         this.time = time;
-        this.catalyst = catalyst;
-        this.energy = energy;
         this.itemPredicate = itemPredicate;
         this.transformChance = transformChance;
         validate();
@@ -173,14 +166,6 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
         return time;
     }
 
-    public Optional<Catalyst> getCatalystRequirement() {
-        return catalyst;
-    }
-
-    public Optional<EnergyRequirement> getEnergyRequirement() {
-        return energy;
-    }
-
     public Optional<ItemPredicate> getItemDataPredicate() {
         return itemPredicate;
     }
@@ -209,12 +194,10 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
             Optional<Biomes> biomes = parseBiomes(json);
             Optional<Height> height = parseHeight(json);
             Optional<TimeCondition> time = parseTime(json);
-            Optional<Catalyst> catalyst = parseCatalyst(json);
-            Optional<EnergyRequirement> energy = parseEnergy(json);
             Optional<ItemPredicate> predicate = parseItemPredicate(json);
             float chance = GsonHelper.getAsFloat(json, "transform_chance", 1.0F);
 
-            return new ItemTransformRecipe(recipeId, input, result, byproducts, dimensions, weather, biomes, height, time, catalyst, energy, predicate, chance);
+            return new ItemTransformRecipe(recipeId, input, result, byproducts, dimensions, weather, biomes, height, time, predicate, chance);
         }
 
         @Override
@@ -227,11 +210,9 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
             Optional<Biomes> biomes = readOptional(buf, Biomes::fromNetwork);
             Optional<Height> height = readOptional(buf, Height::fromNetwork);
             Optional<TimeCondition> time = readOptional(buf, TimeCondition::fromNetwork);
-            Optional<Catalyst> catalyst = readOptional(buf, Catalyst::fromNetwork);
-            Optional<EnergyRequirement> energy = readOptional(buf, EnergyRequirement::fromNetwork);
             Optional<ItemPredicate> predicate = readOptional(buf, Serializer::readItemPredicate);
             float chance = buf.readFloat();
-            return new ItemTransformRecipe(recipeId, input, result, byproducts, dimensions, weather, biomes, height, time, catalyst, energy, predicate, chance);
+            return new ItemTransformRecipe(recipeId, input, result, byproducts, dimensions, weather, biomes, height, time, predicate, chance);
         }
 
         @Override
@@ -244,8 +225,6 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
             writeOptional(buf, recipe.biomes, (buffer, value) -> value.toNetwork(buffer));
             writeOptional(buf, recipe.height, (buffer, value) -> value.toNetwork(buffer));
             writeOptional(buf, recipe.time, (buffer, value) -> value.toNetwork(buffer));
-            writeOptional(buf, recipe.catalyst, (buffer, value) -> value.toNetwork(buffer));
-            writeOptional(buf, recipe.energy, (buffer, value) -> value.toNetwork(buffer));
             writeOptional(buf, recipe.itemPredicate, Serializer::writeItemPredicate);
             buf.writeFloat(recipe.transformChance);
         }
@@ -331,45 +310,59 @@ public class ItemTransformRecipe implements Recipe<SimpleContainer> {
         }
 
         private static Optional<TimeCondition> parseTime(JsonObject json) {
-            if (!json.has("time")) {
+            if (!json.has("time") || json.get("time").isJsonNull()) {
                 return Optional.empty();
             }
-            JsonObject obj = GsonHelper.getAsJsonObject(json, "time");
-            String modeName = GsonHelper.getAsString(obj, "mode", TimeCondition.Mode.ANY.getSerializedName());
-            TimeCondition.Mode mode = TimeCondition.Mode.fromName(modeName);
-            if (mode == null) {
-                throw new JsonParseException("Unknown time mode: " + modeName);
+
+            JsonElement element = json.get("time");
+            if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()) {
+                return Optional.of(parseKeywordTime(element.getAsString()));
             }
-            Optional<Integer> start = obj.has("start") ? Optional.of(GsonHelper.getAsInt(obj, "start")) : Optional.empty();
-            Optional<Integer> end = obj.has("end") ? Optional.of(GsonHelper.getAsInt(obj, "end")) : Optional.empty();
-            return Optional.of(new TimeCondition(mode, start, end));
+            if (element.isJsonArray()) {
+                return Optional.of(parseRangeTime(element.getAsJsonArray()));
+            }
+            if (element.isJsonObject()) {
+                return Optional.of(parseLegacyTimeObject(element.getAsJsonObject()));
+            }
+            throw new JsonParseException("Invalid time condition format. Expected keyword string, [start, end] array, or legacy object.");
         }
 
-        private static Optional<Catalyst> parseCatalyst(JsonObject json) {
-            if (!json.has("catalyst")) {
-                return Optional.empty();
+        // 兼容旧版 object 写法，同时支持新版字符串/数组语义。
+        private static TimeCondition parseLegacyTimeObject(JsonObject obj) {
+            if (!obj.has("mode") && obj.has("start") && obj.has("end")) {
+                return TimeCondition.range(GsonHelper.getAsInt(obj, "start"), GsonHelper.getAsInt(obj, "end"));
             }
-            JsonObject obj = GsonHelper.getAsJsonObject(json, "catalyst");
-            JsonArray array = GsonHelper.getAsJsonArray(obj, "blocks");
-            List<ResourceKey<net.minecraft.world.level.block.Block>> blocks = new ArrayList<>(array.size());
-            for (JsonElement element : array) {
-                ResourceLocation id = parseResourceLocation(element, "block");
-                blocks.add(ResourceKey.create(net.minecraft.core.registries.Registries.BLOCK, id));
-            }
-            int horizontal = GsonHelper.getAsInt(obj, "horizontal_range", Catalyst.DEFAULT_HORIZONTAL_RANGE);
-            int vertical = GsonHelper.getAsInt(obj, "vertical_range", Catalyst.DEFAULT_VERTICAL_RANGE);
-            return Optional.of(new Catalyst(blocks, horizontal, vertical));
+
+            String modeName = GsonHelper.getAsString(obj, "mode", "any").toLowerCase(Locale.ROOT);
+            return switch (modeName) {
+                case "any" -> TimeCondition.any();
+                case "day" -> TimeCondition.day();
+                case "night" -> TimeCondition.night();
+                case "noon" -> TimeCondition.noon();
+                case "midnight" -> TimeCondition.midnight();
+                case "range" -> {
+                    if (!obj.has("start") || !obj.has("end")) {
+                        throw new JsonParseException("Time mode 'range' requires both start and end.");
+                    }
+                    yield TimeCondition.range(GsonHelper.getAsInt(obj, "start"), GsonHelper.getAsInt(obj, "end"));
+                }
+                default -> throw new JsonParseException("Unknown time mode: " + modeName);
+            };
         }
 
-        private static Optional<EnergyRequirement> parseEnergy(JsonObject json) {
-            if (!json.has("energy")) {
-                return Optional.empty();
+        private static TimeCondition parseKeywordTime(String value) {
+            return TimeCondition.Keyword.byName(value.trim().toLowerCase(Locale.ROOT))
+                    .map(TimeCondition::keyword)
+                    .orElseThrow(() -> new JsonParseException("Unknown time keyword: " + value));
+        }
+
+        private static TimeCondition parseRangeTime(JsonArray array) {
+            if (array.size() != 2) {
+                throw new JsonParseException("Time range must be [start, end].");
             }
-            JsonObject obj = GsonHelper.getAsJsonObject(json, "energy");
-            int amount = GsonHelper.getAsInt(obj, "amount");
-            int horizontal = GsonHelper.getAsInt(obj, "horizontal_range", EnergyRequirement.DEFAULT_HORIZONTAL_RANGE);
-            int vertical = GsonHelper.getAsInt(obj, "vertical_range", EnergyRequirement.DEFAULT_VERTICAL_RANGE);
-            return Optional.of(new EnergyRequirement(amount, horizontal, vertical));
+            int start = GsonHelper.convertToInt(array.get(0), "time[0]");
+            int end = GsonHelper.convertToInt(array.get(1), "time[1]");
+            return TimeCondition.range(start, end);
         }
 
         private static Optional<ItemPredicate> parseItemPredicate(JsonObject json) {
