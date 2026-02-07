@@ -24,6 +24,9 @@ minecraft {
             workingDirectory project.file('run-1.20/' + name)
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            // 让依赖模组（如 Architectury）的 refmap 在开发环境中从 SRG 重映射到当前命名空间
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
                 portaltransform {
                     source sourceSets.main
@@ -50,10 +53,47 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     mavenLocal()
+
+    maven {
+        url = uri("https://maven.blamejared.com")
+        content {
+            includeGroup "mezz.jei"
+        }
+    }
+    maven {
+        url = uri("https://modmaven.dev")
+        content {
+            includeGroup "mezz.jei"
+        }
+    }
+    maven {
+        url = uri("https://maven.architectury.dev")
+        content {
+            includeGroup "dev.architectury"
+        }
+    }
+    maven {
+        url = uri("https://maven.latvian.dev/releases")
+        content {
+            includeGroup "dev.latvian.mods"
+            includeGroup "dev.latvian.apps"
+        }
+    }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    compileOnly fg.deobf("dev.latvian.mods:kubejs-forge:${kubejs_version}")
+    runtimeOnly fg.deobf("dev.latvian.mods:kubejs-forge:${kubejs_version}")
+    compileOnly fg.deobf("dev.latvian.mods:rhino-forge:${rhino_version}")
+    runtimeOnly fg.deobf("dev.latvian.mods:rhino-forge:${rhino_version}")
+    compileOnly fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
+    runtimeOnly fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
+
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
+    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
 }
 
 tasks.named('processResources', ProcessResources).configure {

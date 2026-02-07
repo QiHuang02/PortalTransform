@@ -15,8 +15,7 @@ public class DataGenerators {
         DataGenerator generator = event.getGenerator();
         PackOutput packOutput = generator.getPackOutput();
 
-        generator.addProvider(event.includeServer(),
-                new LangProvider(packOutput)
-        );
+        generator.addProvider(event.includeClient(), new LangProvider(packOutput, "en_us"));
+        generator.addProvider(event.includeClient(), new LangProvider(packOutput, "zh_cn"));
     }
 }
