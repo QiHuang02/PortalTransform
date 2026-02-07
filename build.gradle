@@ -24,6 +24,9 @@ minecraft {
             workingDirectory project.file('run-1.20/' + name)
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            // 让依赖模组（如 Architectury）的 refmap 在开发环境中从 SRG 重映射到当前命名空间
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
                 portaltransform {
                     source sourceSets.main
