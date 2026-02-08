@@ -10,9 +10,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 public final class Components {
     private static final String NO_PORTAL_TRANSFORM_TAG = "PortalTransformNoTransform";
 
-    private Components() {
-    }
-
     public static void register(IEventBus eventBus) {
         // No-op on Forge 1.20.1: data components are not available, so nothing to register.
     }
