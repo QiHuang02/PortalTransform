@@ -3,7 +3,7 @@ name: Publish Release
 on:
   push:
     branches:
-      - NeoForge/2101
+      - 2001-forge
     paths-ignore:
       - "*.md"
 
