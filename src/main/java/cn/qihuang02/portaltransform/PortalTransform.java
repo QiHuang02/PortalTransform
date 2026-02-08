@@ -5,7 +5,6 @@ import cn.qihuang02.portaltransform.config.PTConfig;
 import cn.qihuang02.portaltransform.recipe.Recipes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -24,7 +23,7 @@ public class PortalTransform {
         Components.register(modEventBus);
         Recipes.register(modEventBus);
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, PTConfig.COMMON_SPEC);
+        context.registerConfig(ModConfig.Type.COMMON, PTConfig.COMMON_SPEC);
     }
 
     @Contract("_ -> new")
