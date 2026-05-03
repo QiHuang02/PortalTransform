@@ -2,7 +2,9 @@ package cn.qihuang02.project_dimension.symbol;
 
 import cn.qihuang02.project_dimension.register.DimensionSymbolRegistry;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.StringJoiner;
 
@@ -18,26 +20,19 @@ public record DimensionSymbolVector(
     public static final int MAX = 10;
     public static final DimensionSymbolVector ZERO = new DimensionSymbolVector(0, 0, 0, 0, 0, 0);
 
-    public static DimensionSymbolVector fromJson(JsonObject json) {
-        return new DimensionSymbolVector(
-                readSymbol(json, "life"),
-                readSymbol(json, "form"),
-                readSymbol(json, "flame"),
-                readSymbol(json, "void"),
-                readSymbol(json, "soul"),
-                readSymbol(json, "phase")
-        ).clamp();
-    }
+    public static final Codec<DimensionSymbolVector> RAW_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.INT.fieldOf("life").forGetter(DimensionSymbolVector::life),
+            Codec.INT.fieldOf("form").forGetter(DimensionSymbolVector::form),
+            Codec.INT.fieldOf("flame").forGetter(DimensionSymbolVector::flame),
+            Codec.INT.fieldOf("void").forGetter(DimensionSymbolVector::voidAffinity),
+            Codec.INT.fieldOf("soul").forGetter(DimensionSymbolVector::soul),
+            Codec.INT.fieldOf("phase").forGetter(DimensionSymbolVector::phase)
+    ).apply(instance, DimensionSymbolVector::new));
 
-    private static int readSymbol(JsonObject json, String key) {
-        if (!json.has(key)) {
-            return 0;
-        }
-        if (!json.get(key).isJsonPrimitive() || !json.get(key).getAsJsonPrimitive().isNumber()) {
-            throw new JsonParseException("象征值必须是数字：" + key);
-        }
-        return json.get(key).getAsInt();
-    }
+    public static final Codec<DimensionSymbolVector> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            ResourceLocation.CODEC.fieldOf("dimension").forGetter(v -> ResourceLocation.withDefaultNamespace("unknown")),
+            RAW_CODEC.fieldOf("symbols").forGetter(java.util.function.Function.identity())
+    ).apply(instance, (dim, vec) -> vec));
 
     private static int clampValue(int value) {
         return Math.clamp(value, MIN, MAX);
@@ -78,17 +73,6 @@ public record DimensionSymbolVector(
                 soul - other.soul,
                 phase - other.phase
         );
-    }
-
-    public JsonObject toJson() {
-        JsonObject json = new JsonObject();
-        json.addProperty("life", life);
-        json.addProperty("form", form);
-        json.addProperty("flame", flame);
-        json.addProperty("void", voidAffinity);
-        json.addProperty("soul", soul);
-        json.addProperty("phase", phase);
-        return json;
     }
 
     public String toShortString() {

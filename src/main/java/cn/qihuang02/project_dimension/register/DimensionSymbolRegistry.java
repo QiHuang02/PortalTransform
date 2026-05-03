@@ -40,7 +40,7 @@ public final class DimensionSymbolRegistry {
         Map<String, IDimensionSymbol> symbols = new LinkedHashMap<>();
         for (IDimensionSymbol symbol : BUILTIN_SYMBOLS) {
             if (symbols.put(symbol.key(), symbol) != null) {
-                throw new IllegalStateException("重复注册象征：" + symbol.key());
+                throw new IllegalStateException("Duplicate symbol registration: " + symbol.key());
             }
         }
         return Map.copyOf(symbols);
@@ -93,7 +93,7 @@ public final class DimensionSymbolRegistry {
                 }
             }
         } catch (IOException | URISyntaxException ex) {
-            throw new IllegalStateException("扫描维度象征类失败", ex);
+            throw new IllegalStateException("Failed to scan dimension symbol classes", ex);
         }
         return classNames;
     }
@@ -139,7 +139,7 @@ public final class DimensionSymbolRegistry {
             }
             return (IDimensionSymbol) type.getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException ex) {
-            throw new IllegalStateException("创建维度象征实例失败：" + className, ex);
+            throw new IllegalStateException("Failed to create dimension symbol instance: " + className, ex);
         }
     }
 }

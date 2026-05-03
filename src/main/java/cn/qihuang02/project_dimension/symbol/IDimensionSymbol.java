@@ -8,7 +8,7 @@ public interface IDimensionSymbol {
     default String key() {
         DimensionSymbol annotation = getClass().getAnnotation(DimensionSymbol.class);
         if (annotation == null) {
-            throw new IllegalStateException(getClass().getName() + " 缺少 @DimensionSymbol 注解");
+            throw new IllegalStateException(getClass().getName() + " is missing the @DimensionSymbol annotation");
         }
         return annotation.value();
     }
@@ -16,7 +16,7 @@ public interface IDimensionSymbol {
     default String displayName() {
         DimensionSymbol annotation = getClass().getAnnotation(DimensionSymbol.class);
         if (annotation == null) {
-            throw new IllegalStateException(getClass().getName() + " 缺少 @DimensionSymbol 注解");
+            throw new IllegalStateException(getClass().getName() + " is missing the @DimensionSymbol annotation");
         }
         return annotation.displayName();
     }
@@ -24,7 +24,7 @@ public interface IDimensionSymbol {
     default boolean compound() {
         DimensionSymbol annotation = getClass().getAnnotation(DimensionSymbol.class);
         if (annotation == null) {
-            throw new IllegalStateException(getClass().getName() + " 缺少 @DimensionSymbol 注解");
+            throw new IllegalStateException(getClass().getName() + " is missing the @DimensionSymbol annotation");
         }
         return annotation.compound();
     }
