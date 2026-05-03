@@ -1,8 +1,8 @@
 package cn.qihuang02.project_dimension.symbol.compound;
 
+import cn.qihuang02.project_dimension.api.IDimensionSymbol;
 import cn.qihuang02.project_dimension.register.DimensionSymbol;
 import cn.qihuang02.project_dimension.symbol.DimensionSymbolVector;
-import cn.qihuang02.project_dimension.symbol.IDimensionSymbol;
 
 @DimensionSymbol(value = "forge", displayName = "Forge", compound = true)
 public final class ForgeSymbol implements IDimensionSymbol {

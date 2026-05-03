@@ -1,6 +1,6 @@
 package cn.qihuang02.project_dimension.register;
 
-import cn.qihuang02.project_dimension.symbol.IDimensionSymbol;
+import cn.qihuang02.project_dimension.api.IDimensionSymbol;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforgespi.language.ModFileScanData;
 import org.objectweb.asm.Type;
@@ -18,9 +18,9 @@ import java.util.jar.JarFile;
 public final class DimensionSymbolRegistry {
     private static final String SYMBOL_PACKAGE = "cn.qihuang02.project_dimension.symbol";
     private static final String SYMBOL_PACKAGE_PATH = SYMBOL_PACKAGE.replace('.', '/');
-    private static final Type DIMENSION_SYMBOL_ANNOTATION = Type.getType(DimensionSymbol.class);
     private static final List<IDimensionSymbol> BUILTIN_SYMBOLS = discoverSymbols();
     private static final Map<String, IDimensionSymbol> BY_KEY = indexByKey();
+    private static final Type DIMENSION_SYMBOL_ANNOTATION = Type.getType(DimensionSymbol.class);
 
     public static List<IDimensionSymbol> builtins() {
         return BUILTIN_SYMBOLS;

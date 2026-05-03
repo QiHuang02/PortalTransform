@@ -2,18 +2,17 @@ package cn.qihuang02.project_dimension.symbol.resolver;
 
 import cn.qihuang02.project_dimension.symbol.DimensionSymbolVector;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 
 public final class EnvironmentSymbolResolver {
-    public static DimensionSymbolVector resolve(ServerLevel level, BlockPos pos) {
-        // 第一阶段只计算源侧即时环境，生物群系和方块扫描留给后续数据驱动扩展。
+    public static DimensionSymbolVector resolve(Level level, BlockPos pos) {
         DimensionSymbolVector result = weather(level)
                 .plus(dayTime(level))
                 .plus(height(pos));
         return result.clamp();
     }
 
-    private static DimensionSymbolVector weather(ServerLevel level) {
+    private static DimensionSymbolVector weather(Level level) {
         if (level.isThundering()) {
             return new DimensionSymbolVector(0, 0, 2, 0, 1, 1);
         }
@@ -23,7 +22,7 @@ public final class EnvironmentSymbolResolver {
         return new DimensionSymbolVector(0, 1, 0, 0, 0, 0);
     }
 
-    private static DimensionSymbolVector dayTime(ServerLevel level) {
+    private static DimensionSymbolVector dayTime(Level level) {
         long dayTime = level.getDayTime() % 24000L;
         DimensionSymbolVector result = DimensionSymbolVector.ZERO;
 

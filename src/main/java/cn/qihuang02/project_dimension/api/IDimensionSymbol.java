@@ -1,6 +1,7 @@
-package cn.qihuang02.project_dimension.symbol;
+package cn.qihuang02.project_dimension.api;
 
 import cn.qihuang02.project_dimension.register.DimensionSymbol;
+import cn.qihuang02.project_dimension.symbol.DimensionSymbolVector;
 
 public interface IDimensionSymbol {
     int resolve(DimensionSymbolVector vector);
@@ -27,5 +28,13 @@ public interface IDimensionSymbol {
             throw new IllegalStateException(getClass().getName() + " is missing the @DimensionSymbol annotation");
         }
         return annotation.compound();
+    }
+
+    default int color() {
+        DimensionSymbol annotation = getClass().getAnnotation(DimensionSymbol.class);
+        if (annotation == null) {
+            throw new IllegalStateException(getClass().getName() + " is missing the @DimensionSymbol annotation");
+        }
+        return annotation.color();
     }
 }

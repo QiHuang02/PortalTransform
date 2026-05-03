@@ -13,4 +13,6 @@ public @interface DimensionSymbol {
     String displayName();
 
     boolean compound() default false;
+
+    int color() default 0xFFFFFF;
 }

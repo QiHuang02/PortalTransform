@@ -1,7 +1,7 @@
 package cn.qihuang02.project_dimension.symbol;
 
+import cn.qihuang02.project_dimension.api.IDimensionSymbol;
 import cn.qihuang02.project_dimension.register.DimensionSymbolRegistry;
-import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;

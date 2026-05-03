@@ -1,8 +1,8 @@
 package cn.qihuang02.project_dimension.symbol.resolver;
 
+import cn.qihuang02.project_dimension.api.IDimensionSymbol;
 import cn.qihuang02.project_dimension.register.DimensionSymbolRegistry;
 import cn.qihuang02.project_dimension.symbol.DimensionSymbolVector;
-import cn.qihuang02.project_dimension.symbol.IDimensionSymbol;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -22,4 +22,10 @@ public final class SymbolContextFactory {
         DimensionSymbolVector delta = effectiveTarget.minus(effectiveSource);
         return new SymbolContext(sourceBase, targetBase, environmentModifier, effectiveSource, effectiveTarget, delta);
     }
+
+    public static DimensionSymbolVector computeLocal(Registry<DimensionSymbolVector> registry, Level level, BlockPos pos) {
+        DimensionSymbolVector sourceBase = DimensionSymbolManager.getBase(registry, level.dimension());
+        DimensionSymbolVector environmentModifier = EnvironmentSymbolResolver.resolve(level, pos);
+        return sourceBase.plus(environmentModifier).clamp();
+    }
 }

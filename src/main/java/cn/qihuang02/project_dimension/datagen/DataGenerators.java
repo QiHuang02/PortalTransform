@@ -17,5 +17,9 @@ public final class DataGenerators {
 
         generator.addProvider(event.includeServer(),
                 new DimensionSymbolDataProvider(packOutput));
+        generator.addProvider(event.includeClient(),
+                new ModLangProvider(packOutput, "en_us"));
+        generator.addProvider(event.includeClient(),
+                new ModLangProvider(packOutput, "zh_cn"));
     }
 }
