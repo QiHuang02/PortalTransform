@@ -1,8 +1,6 @@
 package cn.qihuang02.project_dimension.datagen;
 
 import cn.qihuang02.project_dimension.ProjectDimension;
-import cn.qihuang02.project_dimension.api.IDimensionSymbol;
-import cn.qihuang02.project_dimension.register.DimensionSymbolRegistry;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 
@@ -15,13 +13,14 @@ public class ModLangProvider extends LanguageProvider {
             "void", "虚", "soul", "魂", "phase", "相"
     );
 
-    private static final List<String> TIERS = List.of("low", "moderate", "high", "extreme");
-    private static final List<String> NEG_TIERS = List.of("neg.low", "neg.moderate", "neg.high", "neg.extreme");
+    private static final List<String> TIER_KEYS = List.of(
+            "neg.extreme", "neg.high", "neg.moderate", "neg.low",
+            "dormant",
+            "low", "moderate", "high", "extreme"
+    );
 
-    private static final String[] EN_POS = {"Faint", "Present", "Strong", "Dominant"};
-    private static final String[] EN_NEG = {"Dimmed", "Oppressed", "Overwhelmed", "Inverted"};
-    private static final String[] ZH_POS = {"微弱", "显现", "强烈", "主导"};
-    private static final String[] ZH_NEG = {"黯淡", "压制", "倾覆", "逆转"};
+    private static final String[] ZH_TIERS = {"逆转", "倾覆", "压制", "黯淡", "沉寂", "微弱", "显现", "强烈", "主导"};
+    private static final String[] EN_TIERS = {"Inverted", "Overwhelmed", "Oppressed", "Dimmed", "Dormant", "Faint", "Present", "Strong", "Dominant"};
 
     private final String locale;
 
@@ -37,20 +36,15 @@ public class ModLangProvider extends LanguageProvider {
         add("item.project_dimension.lens", zh ? "位面透镜" : "Planar Lens");
         add("project_dimension.lens.no_symbols", zh ? "未检测到显著的象征" : "No significant symbols detected");
 
-        for (IDimensionSymbol symbol : DimensionSymbolRegistry.builtins()) {
-            if (symbol.compound()) continue;
-            String k = symbol.key();
-            add(k + ".name", zh ? ZH_NAMES.getOrDefault(k, symbol.displayName()) : symbol.displayName());
+        for (var entry : ZH_NAMES.entrySet()) {
+            String k = entry.getKey();
+            String enName = k.substring(0, 1).toUpperCase() + k.substring(1);
+            add("symbol." + k, zh ? entry.getValue() : enName);
+        }
 
-            String[] pos = zh ? ZH_POS : EN_POS;
-            String[] neg = zh ? ZH_NEG : EN_NEG;
-
-            add(k + ".desc.dormant", zh ? "沉寂" : "Dormant");
-
-            for (int i = 0; i < TIERS.size(); i++) {
-                add(k + ".desc." + TIERS.get(i), pos[i]);
-                add(k + ".desc." + NEG_TIERS.get(i), neg[i]);
-            }
+        String[] tiers = zh ? ZH_TIERS : EN_TIERS;
+        for (int i = 0; i < TIER_KEYS.size(); i++) {
+            add("symbol.tier." + TIER_KEYS.get(i), tiers[i]);
         }
     }
 }

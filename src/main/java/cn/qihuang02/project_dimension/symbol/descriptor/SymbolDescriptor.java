@@ -17,9 +17,9 @@ public final class SymbolDescriptor {
 
             int value = symbol.resolve(vector);
             String tier = tierKey(value);
-            MutableComponent component = Component.translatable(symbol.key() + "." + tier)
+            MutableComponent component = Component.translatable("symbol.tier." + tier)
                     .append(" ")
-                    .append(Component.translatable(symbol.key() + ".name"))
+                    .append(Component.translatable("symbol." + symbol.key()))
                     .withColor(value == 0 ? 0xFF888888 : symbol.color());
             lines.add(component);
         }
@@ -41,9 +41,9 @@ public final class SymbolDescriptor {
     }
 
     private static String tierKey(int value) {
-        if (value == 0) return "desc.dormant";
+        if (value == 0) return "dormant";
         int abs = Math.abs(value);
-        String prefix = value > 0 ? "desc." : "desc.neg.";
+        String prefix = value > 0 ? "" : "neg.";
         if (abs <= 3) return prefix + "low";
         if (abs <= 6) return prefix + "moderate";
         if (abs <= 9) return prefix + "high";
