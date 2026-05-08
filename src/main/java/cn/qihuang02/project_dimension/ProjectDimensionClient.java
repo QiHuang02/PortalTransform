@@ -13,7 +13,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -27,9 +26,6 @@ public class ProjectDimensionClient {
     private static final ResourceLocation LENS_SHADER =
             ResourceLocation.fromNamespaceAndPath(ProjectDimension.MODID, "shaders/post/lens.json");
     private static boolean shaderActive = false;
-
-    public ProjectDimensionClient(ModContainer container) {
-    }
 
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
@@ -49,17 +45,28 @@ public class ProjectDimensionClient {
     static void onClientTick(ClientTickEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         var player = mc.player;
-        if (player == null) return;
-
-        boolean wearing = player.getItemBySlot(EquipmentSlot.HEAD).is(ModItems.LENS.get());
-        if (wearing && !shaderActive) {
-            mc.gameRenderer.loadEffect(LENS_SHADER);
-            shaderActive = true;
-        } else if (!wearing && shaderActive) {
-            mc.gameRenderer.shutdownEffect();
+        if (player == null) {
             shaderActive = false;
+            return;
         }
 
+        boolean wearing = player.getItemBySlot(EquipmentSlot.HEAD).is(ModItems.LENS.get());
+        PostChain currentEffect = mc.gameRenderer.currentEffect();
+        boolean effectLoaded = currentEffect != null;
+
+        // 退出世界、重进存档、切换视角等场景下，Minecraft 可能会把后处理链清掉。
+        // 这里以真实 effect 状态为准，确保佩戴 lens 时能自动重新加载。
+        if (wearing && !effectLoaded) {
+            mc.gameRenderer.loadEffect(LENS_SHADER);
+            currentEffect = mc.gameRenderer.currentEffect();
+            effectLoaded = currentEffect != null;
+        } else if (!wearing && effectLoaded) {
+            mc.gameRenderer.shutdownEffect();
+            currentEffect = null;
+            effectLoaded = false;
+        }
+
+        shaderActive = wearing && effectLoaded;
         if (shaderActive) {
             updateShaderUniforms(mc);
         }

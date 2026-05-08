@@ -16,17 +16,15 @@ uniform float Time;
 out vec4 fragColor;
 
 const float TIME_SCALE = 0.333333;
-const float COLOR_INTENSITY = 0.45;
-const float COLOR_BLEND_WIDTH = 0.08;
-const float SELECTOR_COVER = 0.12;
-const float SELECTOR_BRIGHTNESS = 0.88;
-const float SELECTOR_DETAIL_STRENGTH = 0.10;
-const float COVERAGE_COVER = 0.42;
-const float COVERAGE_BRIGHTNESS = 0.72;
+const float CLOUD_INTENSITY = 1.02;
+const float CLOUD_ZOOM = 1.25;
+const float CLOUD_COVER = 0.22;
+const float CLOUD_BRIGHTNESS = 0.70;
+const float DETAIL_STRENGTH = 0.30;
 const vec2 PATTERN_DRIFT = vec2(-0.018, 0.014);
 const vec2 DETAIL_DRIFT = vec2(-0.010, 0.008);
 
-// 简化的 Simplex 风格噪声函数。
+// 基于 simplex 风格噪声构造维度云层。
 vec2 hash(vec2 p) {
     p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
     return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
@@ -59,72 +57,78 @@ float fbm(vec2 p) {
     return 0.5 + 0.5 * h;
 }
 
+float symbolCloud(vec2 uv, vec2 seed, vec2 drift, float weight, float phase) {
+    if (weight <= 0.001) {
+        return 0.0;
+    }
+
+    float time = Time * TIME_SCALE;
+    vec2 mainUv = uv * mix(0.92, 1.28, weight) + seed + drift * time;
+    vec2 detailUv = uv * mix(2.10, 2.85, weight) + seed * 1.7 - drift.yx * time * 0.7 + phase;
+
+    float body = fbm(mainUv * CLOUD_ZOOM);
+    float detail = fbm(detailUv);
+    float wisps = fbm(mainUv * 0.65 + vec2(phase, -phase));
+
+    float density = body + (detail - 0.5) * DETAIL_STRENGTH + (wisps - 0.5) * 0.24;
+    float cover = mix(0.42, 0.24, weight);
+    float brightness = mix(0.64, 0.82, weight);
+    float mask = smoothstep(cover, brightness, density);
+    return mask * mix(0.60, 1.30, weight);
+}
+
+vec3 screenBlend(vec3 base, vec3 layer) {
+    return 1.0 - (1.0 - base) * (1.0 - layer);
+}
+
 void main() {
     vec4 original = texture(DiffuseSampler, texCoord);
 
-    // 缩放 UV 用于噪声采样。
-    vec2 uv = texCoord * 1.8;
-    float aspect = OutSize.x / OutSize.y;
-    uv.x *= aspect;
-    float scaledTime = Time * TIME_SCALE;
-    vec2 patternUv = uv + scaledTime * PATTERN_DRIFT;
-    vec2 detailUv = uv + scaledTime * DETAIL_DRIFT;
+    vec2 uv = texCoord - 0.5;
+    uv.x *= OutSize.x / OutSize.y;
+    uv *= 1.85;
 
-    // 归一化权重：每种象征获得的全屏面积比例近似等于自身权重占比。
-    float weightTotal = Weight0 + Weight1 + Weight2 + Weight3 + Weight4 + Weight5;
-    float useFallback = 1.0 - step(0.001, weightTotal);
-    weightTotal = max(weightTotal, 0.001);
-    float w0 = mix(Weight0 / weightTotal, 1.0 / 6.0, useFallback);
-    float w1 = mix(Weight1 / weightTotal, 1.0 / 6.0, useFallback);
-    float w2 = mix(Weight2 / weightTotal, 1.0 / 6.0, useFallback);
-    float w3 = mix(Weight3 / weightTotal, 1.0 / 6.0, useFallback);
-    float w4 = mix(Weight4 / weightTotal, 1.0 / 6.0, useFallback);
-    float w5 = mix(Weight5 / weightTotal, 1.0 / 6.0, useFallback);
+    float globalTime = Time * TIME_SCALE;
+    vec2 cloudUv = uv + PATTERN_DRIFT * globalTime;
+    vec2 detailUv = uv + DETAIL_DRIFT * globalTime;
 
-    // 使用累计权重把 0..1 的选择噪声切分为 6 个面积区间。
-    float c0 = w0;
-    float c1 = c0 + w1;
-    float c2 = c1 + w2;
-    float c3 = c2 + w3;
-    float c4 = c3 + w4;
+    // 全局云层覆盖，决定哪里显现“维度透镜”效果。
+    float coverageBase = fbm(cloudUv * CLOUD_ZOOM + vec2(10.0, 10.0));
+    float coverageDetail = fbm(detailUv * 2.35 + vec2(4.3, 7.1));
+    float coverageNoise = clamp(coverageBase + (coverageDetail - 0.5) * 0.16, 0.0, 1.0);
+    float coverageMask = smoothstep(CLOUD_COVER, CLOUD_BRIGHTNESS, coverageNoise);
 
-    // 主选择噪声决定每个像素属于哪个象征，参考云层 smoothstep 拉开柔和过渡。
-    float selectorBase = fbm(patternUv * 1.25 + vec2(10.0, 10.0));
-    float selectorDetail = fbm(detailUv * 2.7 + vec2(4.3, 7.1));
-    float selector = clamp(selectorBase + (selectorDetail - 0.5) * SELECTOR_DETAIL_STRENGTH, 0.0, 1.0);
-    selector = smoothstep(SELECTOR_COVER, SELECTOR_BRIGHTNESS, selector);
+    // 六个基础象征各自形成一层流动彩云，颜色由象征注解颜色决定。
+    float c0 = symbolCloud(cloudUv, vec2(1.7, 8.2), vec2(-0.020, 0.013), Weight0, 0.13);
+    float c1 = symbolCloud(cloudUv, vec2(8.4, 2.1), vec2(-0.014, 0.009), Weight1, 0.31);
+    float c2 = symbolCloud(cloudUv, vec2(4.6, 11.3), vec2(-0.011, -0.010), Weight2, 0.57);
+    float c3 = symbolCloud(cloudUv, vec2(12.2, 5.9), vec2(-0.024, 0.006), Weight3, 0.79);
+    float c4 = symbolCloud(cloudUv, vec2(6.3, 14.7), vec2(-0.009, 0.015), Weight4, 1.03);
+    float c5 = symbolCloud(cloudUv, vec2(15.5, 9.8), vec2(-0.017, -0.005), Weight5, 1.27);
 
-    // 累计边界附近做软过渡；零权重颜色不参与面积分配。
-    float blendWidth = COLOR_BLEND_WIDTH * mix(0.75, 1.35, selectorDetail);
-    float e0 = smoothstep(c0 - blendWidth, c0 + blendWidth, selector);
-    float e1 = smoothstep(c1 - blendWidth, c1 + blendWidth, selector);
-    float e2 = smoothstep(c2 - blendWidth, c2 + blendWidth, selector);
-    float e3 = smoothstep(c3 - blendWidth, c3 + blendWidth, selector);
-    float e4 = smoothstep(c4 - blendWidth, c4 + blendWidth, selector);
+    float cloudTotal = c0 + c1 + c2 + c3 + c4 + c5;
+    vec3 tint = vec3(0.0);
+    if (cloudTotal > 0.001) {
+        tint = (
+                Color0 * c0 +
+                Color1 * c1 +
+                Color2 * c2 +
+                Color3 * c3 +
+                Color4 * c4 +
+                Color5 * c5
+        ) / cloudTotal;
+    }
 
-    float m0 = (1.0 - e0) * step(0.001, w0);
-    float m1 = e0 * (1.0 - e1) * step(0.001, w1);
-    float m2 = e1 * (1.0 - e2) * step(0.001, w2);
-    float m3 = e2 * (1.0 - e3) * step(0.001, w3);
-    float m4 = e3 * (1.0 - e4) * step(0.001, w4);
-    float m5 = e4 * step(0.001, w5);
+    // 再叠一层细节权重，让高权重象征更容易成为主导色，但不会整屏霸占。
+    float weightPresence = clamp(cloudTotal * 0.42, 0.0, 1.0);
+    float innerGlow = smoothstep(0.28, 0.88, coverageDetail);
 
-    float maskTotal = max(m0 + m1 + m2 + m3 + m4 + m5, 0.001);
-    vec3 blended = (Color0 * m0 + Color1 * m1 + Color2 * m2 + Color3 * m3 + Color4 * m4 + Color5 * m5) / maskTotal;
-
-    // 覆盖遮罩决定哪里显色、哪里透明；显色区域内部再按 selector 分配象征颜色。
-    float coverageNoise = fbm(patternUv * 1.15 + vec2(13.7, 2.4));
-    float coverageDetail = fbm(detailUv * 2.4 + vec2(1.9, 11.6));
-    float coverageMask = clamp(coverageNoise + (coverageDetail - 0.5) * 0.12, 0.0, 1.0);
-    coverageMask = smoothstep(COVERAGE_COVER, COVERAGE_BRIGHTNESS, coverageMask);
-
-    // 边缘渐隐，避免画面边缘过亮。
     vec2 vig = texCoord * 2.0 - 1.0;
-    float vignette = 1.0 - smoothstep(0.3, 1.3, length(vig));
+    float vignette = 1.0 - smoothstep(0.35, 1.25, length(vig));
 
-    // 加色叠加：只增强颜色，不压暗原画面。
-    float strength = COLOR_INTENSITY * coverageMask * vignette;
-    vec3 result = min(original.rgb + blended * strength, 1.0);
+    float strength = CLOUD_INTENSITY * coverageMask * mix(0.88, 1.18, innerGlow) * mix(0.95, 1.28, weightPresence) * mix(0.94, 1.02, vignette);
+    vec3 cloudLayer = tint * strength;
+    vec3 result = screenBlend(original.rgb, cloudLayer);
 
     fragColor = vec4(result, 1.0);
 }
