@@ -3,7 +3,7 @@ name: Publish Release
 on:
   push:
     branches:
-      - 2001-forge
+      - forge/20.1
     paths-ignore:
       - "*.md"
 
