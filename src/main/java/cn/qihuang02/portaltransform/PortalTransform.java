@@ -3,6 +3,8 @@ package cn.qihuang02.portaltransform;
 import cn.qihuang02.portaltransform.component.Components;
 import cn.qihuang02.portaltransform.config.PTConfig;
 import cn.qihuang02.portaltransform.recipe.Recipes;
+import cn.qihuang02.portaltransform.registry.PTDatapackRegistries;
+import cn.qihuang02.portaltransform.registry.PTDimensionSymbols;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -18,9 +20,11 @@ public class PortalTransform {
     public static final String MODID = "portaltransform";
     public static final Logger LOGGER = LogManager.getLogger();
 
-    public PortalTransform(IEventBus modEventBus, ModContainer modContainer) {
+    public PortalTransform(IEventBus modEventBus, @NotNull ModContainer modContainer) {
         Components.register(modEventBus);
         Recipes.register(modEventBus);
+        PTDimensionSymbols.register(modEventBus);
+        modEventBus.register(PTDatapackRegistries.class);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, PTConfig.COMMON_SPEC);
     }

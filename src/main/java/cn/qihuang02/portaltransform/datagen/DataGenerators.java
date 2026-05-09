@@ -18,5 +18,8 @@ public class DataGenerators {
         generator.addProvider(event.includeServer(),
                 new LangProvider(packOutput)
         );
+        generator.addProvider(event.includeServer(),
+                new PTDatapackProvider(packOutput, event.getLookupProvider())
+        );
     }
 }
