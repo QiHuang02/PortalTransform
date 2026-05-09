@@ -3,7 +3,7 @@ name: Publish Release
 on:
   push:
     branches:
-      - 2101-neo
+      - neo/21.1
     paths-ignore:
       - '*.md'
 
