@@ -9,21 +9,21 @@ public enum SymbolTier {
     /**
      * 基础象征层级。
      */
-    BASE(1, -10, 10),
+    BASE(1, -10.0F, 10.0F),
     /**
      * 二阶复合象征层级。
      */
-    SECOND(2, -30, 30),
+    SECOND(2, -30.0F, 30.0F),
     /**
      * 三阶复合象征层级。
      */
-    THIRD(3, -50, 50);
+    THIRD(3, -50.0F, 50.0F);
 
     private final int tier;
-    private final int minValue;
-    private final int maxValue;
+    private final float minValue;
+    private final float maxValue;
 
-    SymbolTier(int tier, int minValue, int maxValue) {
+    SymbolTier(int tier, float minValue, float maxValue) {
         this.tier = tier;
         this.minValue = minValue;
         this.maxValue = maxValue;
@@ -44,22 +44,22 @@ public enum SymbolTier {
     /**
      * @return 指定象征允许的最小值
      */
-    public static int getMinValue(@NotNull IDimensionSymbol symbol) {
+    public static float getMinValue(@NotNull IDimensionSymbol symbol) {
         return fromTier(symbol.tier()).minValue();
     }
 
     /**
      * @return 指定象征允许的最大值
      */
-    public static int getMaxValue(@NotNull IDimensionSymbol symbol) {
+    public static float getMaxValue(@NotNull IDimensionSymbol symbol) {
         return fromTier(symbol.tier()).maxValue();
     }
 
-    public static int getMinValueByTier(int tier) {
+    public static float getMinValueByTier(int tier) {
         return fromTier(tier).minValue();
     }
 
-    public static int getMaxValueByTier(int tier) {
+    public static float getMaxValueByTier(int tier) {
         return fromTier(tier).maxValue();
     }
 
@@ -67,11 +67,11 @@ public enum SymbolTier {
         return tier;
     }
 
-    public int minValue() {
+    public float minValue() {
         return minValue;
     }
 
-    public int maxValue() {
+    public float maxValue() {
         return maxValue;
     }
 }

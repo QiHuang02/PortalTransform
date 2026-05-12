@@ -16,11 +16,11 @@ import java.util.Objects;
  */
 public record DimensionSymbolValues(
         ResourceKey<Level> dimension,
-        Map<ResourceLocation, Integer> symbols
+        Map<ResourceLocation, Float> symbols
 ) {
     public static final Codec<DimensionSymbolValues> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ResourceKey.codec(Registries.DIMENSION).fieldOf("dimension").forGetter(DimensionSymbolValues::dimension),
-            Codec.unboundedMap(ResourceLocation.CODEC, Codec.INT)
+            Codec.unboundedMap(ResourceLocation.CODEC, Codec.FLOAT)
                     .fieldOf("symbols")
                     .forGetter(DimensionSymbolValues::symbols)
     ).apply(instance, DimensionSymbolValues::new));

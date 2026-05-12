@@ -29,35 +29,35 @@ public class PTDatapackProvider extends DatapackBuiltinEntriesProvider {
                 register(context,
                         Level.OVERWORLD,
                         linkedSymbols(
-                                entry("life", 6),
-                                entry("form", 4),
-                                entry("flame", 1),
-                                entry("void", -2),
-                                entry("soul", 1),
-                                entry("phase", 0),
-                                entry("bloom", 1)
+                                entry("life", 6.0F),
+                                entry("form", 4.0F),
+                                entry("flame", 1.0F),
+                                entry("void", -2.0F),
+                                entry("soul", 1.0F),
+                                entry("phase", 0.0F),
+                                entry("bloom", 1.0F)
                         ));
                 register(context,
                         Level.NETHER,
                         linkedSymbols(
-                                entry("life", -4),
-                                entry("form", -1),
-                                entry("flame", 8),
-                                entry("void", 3),
-                                entry("soul", 0),
-                                entry("phase", -2),
-                                entry("cinder", 2)
+                                entry("life", -4.0F),
+                                entry("form", -1.0F),
+                                entry("flame", 8.0F),
+                                entry("void", 3.0F),
+                                entry("soul", 0.0F),
+                                entry("phase", -2.0F),
+                                entry("cinder", 2.0F)
                         ));
                 register(context,
                         Level.END,
                         linkedSymbols(
-                                entry("life", -3),
-                                entry("form", 2),
-                                entry("flame", -2),
-                                entry("void", 7),
-                                entry("soul", 3),
-                                entry("phase", 6),
-                                entry("entropy", 1)
+                                entry("life", -3.0F),
+                                entry("form", 2.0F),
+                                entry("flame", -2.0F),
+                                entry("void", 7.0F),
+                                entry("soul", 3.0F),
+                                entry("phase", 6.0F),
+                                entry("entropy", 1.0F)
                         ));
             });
 
@@ -67,7 +67,7 @@ public class PTDatapackProvider extends DatapackBuiltinEntriesProvider {
 
     private static void register(@NotNull BootstrapContext<DimensionSymbolValues> context,
                                  ResourceKey<Level> dimension,
-                                 Map<ResourceLocation, Integer> symbols) {
+                                 Map<ResourceLocation, Float> symbols) {
         context.register(key(dimension), new DimensionSymbolValues(dimension, symbols));
     }
 
@@ -80,16 +80,16 @@ public class PTDatapackProvider extends DatapackBuiltinEntriesProvider {
 
 
     @SafeVarargs
-    private static @NotNull Map<ResourceLocation, Integer> linkedSymbols(Map.Entry<ResourceLocation, Integer> @NotNull ... entries) {
-        Map<ResourceLocation, Integer> symbols = new LinkedHashMap<>();
-        for (Map.Entry<ResourceLocation, Integer> entry : entries) {
+    private static @NotNull Map<ResourceLocation, Float> linkedSymbols(Map.Entry<ResourceLocation, Float> @NotNull ... entries) {
+        Map<ResourceLocation, Float> symbols = new LinkedHashMap<>();
+        for (Map.Entry<ResourceLocation, Float> entry : entries) {
             symbols.put(entry.getKey(), entry.getValue());
         }
         return symbols;
     }
 
     @Contract("_, _ -> new")
-    private static Map.@NotNull @Unmodifiable Entry<ResourceLocation, Integer> entry(String path, int value) {
+    private static Map.@NotNull @Unmodifiable Entry<ResourceLocation, Float> entry(String path, float value) {
         return Map.entry(PortalTransform.getRL(path), value);
     }
 }
